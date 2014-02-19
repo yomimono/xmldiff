@@ -26,7 +26,7 @@
 VERSION=0.1
 
 PACKAGES=xmlm,xtmpl
-OF_FLAGS=-packages $(PACKAGES)
+OF_FLAGS=-package $(PACKAGES)
 COMPFLAGS=-annot -rectypes -g
 OCAMLPP=
 
@@ -47,10 +47,10 @@ xmldiff.cmxs: xmldiff.cmx
 	$(OCAMLFIND) ocamlopt $(OF_FLAGS) -shared -o $@ $(COMPFLAGS) xmldiff.cmx
 
 xmldiff.cmo: xmldiff.cmi xmldiff.ml
-	$(OCAMLFIND) ocamlc -c $(COMPFLAGS) xmldiff.ml
+	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) xmldiff.ml
 
 xmldiff.cmi: xmldiff.mli
-	$(OCAMLFIND) ocamlc -c $(COMPFLAGS) $<
+	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) $<
 
 ##########
 .PHONY: doc
