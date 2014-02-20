@@ -1,41 +1,4 @@
-(*********************************************************************************)
-(*                Xmldiff                                                        *)
-(*                                                                               *)
-(*    Copyright (C) 2014 Institut National de Recherche en Informatique          *)
-(*    et en Automatique. All rights reserved.                                    *)
-(*                                                                               *)
-(*    This program is free software; you can redistribute it and/or modify       *)
-(*    it under the terms of the GNU Lesser General Public License version        *)
-(*    3 as published by the Free Software Foundation.                            *)
-(*                                                                               *)
-(*    This program is distributed in the hope that it will be useful,            *)
-(*    but WITHOUT ANY WARRANTY; without even the implied warranty of             *)
-(*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *)
-(*    GNU Library General Public License for more details.                       *)
-(*                                                                               *)
-(*    You should have received a copy of the GNU Lesser General Public           *)
-(*    License along with this program; if not, write to the Free Software        *)
-(*    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA                   *)
-(*    02111-1307  USA                                                            *)
-(*                                                                               *)
-(*    Contact: Maxence.Guesdon@inria.fr                                          *)
-(*                                                                               *)
-(*                                                                               *)
-(*********************************************************************************)
-
-(** Computing diffs on XML trees.
-
-  Algorithm adapted from
-  "Tree to tree correction for document trees"
-  by Barnart, Clarke and Duncan. Technical report.
-
-  We implement the first extension of Zhang and Shasha and remove the
-  InsertNode and DeleteNode: they can be replaced by InsertTree and
-  DeleteTree (even if not exactly the same) and the semantic of InsertNode
-  is not clear: where do we insert ? Besides, it is easier to write
-  the cost function if there is only one operation to insert and
-  one to delete.
-*)
+(** *)
 
 module Nmap = Xtmpl.Name_map
 
@@ -148,7 +111,7 @@ let xml_of_file file =
       raise e
 ;;
 
-let atts_of_xml_atts map =
+let atts_of_map map =
   List.rev
     (Nmap.fold
      (fun name s acc -> (name, s) :: acc)
@@ -169,7 +132,7 @@ let string_of_xml ?(cut=false) tree =
   let output = Xmlm.make_output ~ns_prefix ~decl: false (`Buffer b) in
   let frag = function
   | E (tag, atts, childs) ->
-      let atts = atts_of_xml_atts atts in
+      let atts = atts_of_map atts in
       `El ((tag, atts), childs)
   | D d -> `Data d
   in
