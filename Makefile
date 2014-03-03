@@ -63,8 +63,8 @@ doc:
 
 docstog:
 	$(MKDIR) web/refdoc
-	$(OCAMLFIND) ocamldoc.opt $(OF_FLAGS) -rectypes xmldiff.mli \
-	-t Xmldiff -d web/refdoc -g odoc_stog.cmxs
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli \
+	-t Xmldiff -d web/refdoc -g odoc_stog.cmo
 
 webdoc:
 	$(MAKE) docstog

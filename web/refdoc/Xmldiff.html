@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<ocamldoc with-contents="true">
+<title>Xmldiff : Xmldiff</title><contents><div class="ocamldoc-page">
+<div class="navbar">&#160;<a class="up" href="index.html" title="Index">Up</a>
+&#160;</div>
+<h1>Module <a href="type_Xmldiff.html">Xmldiff</a></h1>
+
+<pre><span class="keyword">module</span> Xmldiff: <code class="code">sig</code> <a href="Xmldiff.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Computing diffs on XML trees.
+<div class="vertical-space"> </div>
+
+  Algorithm adapted from
+  "Tree to tree correction for document trees"
+  by Barnart, Clarke and Duncan. Technical report available
+  <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.62.6907">here</a>.
+<div class="vertical-space"> </div>
+
+  We implement the first extension of Zhang and Shasha and remove the
+  InsertNode and DeleteNode operations: they can be replaced by InsertTree and
+  DeleteTree (even if not exactly the same) and the semantic of InsertNode
+  is not clear (where do we insert ?).
+  Besides, it is easier to write the cost function if there is only
+  one operation to insert and one to delete.<br/>
+</div>
+<hr width="100%"/>
+
+<pre><span id="TYPEname"><span class="keyword">type</span> name</span> = <code class="type">Xmlm.name</code> </pre>
+<div class="info ">
+<code class="code">= string * string</code> . Representation
+     of tags and attribute names.<br/>
+</div>
+
+
+<pre><span class="keyword">module</span> <a href="Xmldiff.Nmap.html">Nmap</a>: <code class="type">Map.S</code><code class="type">  with type key = name</code></pre><div class="info">
+Mapping over names.
+</div>
+
+<pre><code><span id="TYPExmlt"><span class="keyword">type</span> <code class="type">'a</code> xmlt</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTxmlt.E"><span class="constructor">E</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPEname">name</a> * string Nmap.t * 'a list</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >A node <code class="code">(tag, attributes, children)</code></td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTxmlt.D"><span class="constructor">D</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >CDATA leaf</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info ">
+XML tree. The type is parametrized because it is shared
+  with an internal richer representation.<br/>
+</div>
+
+
+<pre><span id="TYPExmltree"><span class="keyword">type</span> xmltree</span> = <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a> <a href="Xmldiff.html#TYPExmlt">xmlt</a></code> </pre>
+<div class="info ">
+Simple XML tree.<br/>
+</div>
+
+
+<pre><span id="TYPEcost"><span class="keyword">type</span> cost</span> = <code class="type">int</code> </pre>
+
+
+<pre><code><span id="TYPElabel"><span class="keyword">type</span> label</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlabel.Node"><span class="constructor">Node</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlabel.Text"><span class="constructor">Text</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+
+
+<pre><code><span id="TYPEcost_funs"><span class="keyword">type</span> cost_funs</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&#160;&#160;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcost_funs.cost_insert">cost_insert</span>&#160;: <code class="type">int -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><code class="code">cost_insert size t</code> will return the cost the insert
+        the given tree <code class="code">t</code> of size <code class="code">s</code>.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&#160;&#160;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcost_funs.cost_delete">cost_delete</span>&#160;: <code class="type">int -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><code class="code">cost_delete size t</code> will return the cost the delete
+        the given tree <code class="code">t</code> of size <code class="code">s</code>.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&#160;&#160;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcost_funs.cost_edit">cost_edit</span>&#160;: <code class="type"><a href="Xmldiff.html#TYPElabel">label</a> * <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt;<br/>       <a href="Xmldiff.html#TYPElabel">label</a> * <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><code class="code">cost_edit (label1, t1) (label2, t2)</code> will return the cost the change
+        the first node <code class="code">t1</code> into the second node <code class="code">t2</code>.
+        <code class="code">label1</code> and <code class="code">label2</code> are two string representations allowing to
+        quickly compare the two nodes. The children of nodes are not
+        taken into account for this operation.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+
+
+<pre><code><span id="TYPEpatch_path"><span class="keyword">type</span> patch_path</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_path.Path_cdata"><span class="constructor">Path_cdata</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><code class="code">Path_cdata n</code> refers to the <code class="code">n</code>th CData leaf.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_path.Path_node"><span class="constructor">Path_node</span></span> <span class="keyword">of</span> <code class="type">Xmlm.name * int * <a href="Xmldiff.html#TYPEpatch_path">patch_path</a> option</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><code class="code">Path_node (tag, n, more)</code> refers to the <code class="code">n</code>th element with tag <code class="code">tag</code>.
+      If <code class="code">more &lt;&gt; None</code> then the path goes on into the children of the referenced node.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info ">
+A path to a node in an XML tree where to perform an operation.<br/>
+</div>
+
+
+<pre><code><span id="TYPEpatch_operation"><span class="keyword">type</span> patch_operation</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_operation.PInsertTree"><span class="constructor">PInsertTree</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Insert the given XML tree after the referenced node.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_operation.PDeleteTree"><span class="constructor">PDeleteTree</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Delete the referenced node.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_operation.PUpdateCData"><span class="constructor">PUpdateCData</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Change the referenced node to a CData with the given contents.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_operation.PUpdateNode"><span class="constructor">PUpdateNode</span></span> <span class="keyword">of</span> <code class="type">Xmlm.name * string Nmap.t</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Update the referenced node to be a tag with the given attributes and no child.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpatch_operation.PReplace"><span class="constructor">PReplace</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Replace the referenced node by the given tree.</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info ">
+The patch operations. Each operation is to be performed at a
+  given node (position) in the tree, referenced by a <a href="Xmldiff.html#TYPEpatch_path"><code class="code">Xmldiff.patch_path</code></a>.<br/>
+</div>
+
+
+<pre><span id="TYPEpatch"><span class="keyword">type</span> patch</span> = <code class="type">(<a href="Xmldiff.html#TYPEpatch_path">patch_path</a> * <a href="Xmldiff.html#TYPEpatch_operation">patch_operation</a>) list</code> </pre>
+
+
+<pre><span id="VALdefault_costs"><span class="keyword">val</span> default_costs</span> : <code class="type"><a href="Xmldiff.html#TYPEcost_funs">cost_funs</a></code></pre><div class="info ">
+Default cost functions, defined as:<ul>
+<li>cost_insert size _ = size</li>
+<li>cost_delete size _ = max (size / 4) 1</li>
+<li>cost_edit (label1, _) (label2,_) = if label1 = label2 then 0 else 1</li>
+</ul>
+
+By defining cost functions, you can tune the precision of operations.
+For example, if insertions and deletions are cheap, the algorithm
+will return a single operation replacing the first tree by the second one.<br/>
+</div>
+
+<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">?fcost:<a href="Xmldiff.html#TYPEcost_funs">cost_funs</a> -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; int * <a href="Xmldiff.html#TYPEpatch">patch</a></code></pre><div class="info ">
+<code class="code">diff t1 t2</code> returns the pair <code class="code">(c, p)</code>, with <code class="code">c</code> being the cost
+  to change <code class="code">t1</code> into <code class="code">t2</code> and <code class="code">p</code> the corresponding patch.<br/>
+</div>
+<div class="param_info"><code class="code">fcost</code> : can be used to specify alternative cost functions.</div>
+<br/>
+<div class="section-title" id="2_Utilities">Utilities</div><br/>
+
+<pre><span id="VALxml_of_string"><span class="keyword">val</span> xml_of_string</span> : <code class="type">string -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a></code></pre>
+<pre><span id="VALxml_of_file"><span class="keyword">val</span> xml_of_file</span> : <code class="type">string -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a></code></pre>
+<pre><span id="VALatts_of_map"><span class="keyword">val</span> atts_of_map</span> : <code class="type">string Nmap.t -&gt; (<a href="Xmldiff.html#TYPEname">name</a> * string) list</code></pre>
+<pre><span id="VALstring_of_xml"><span class="keyword">val</span> string_of_xml</span> : <code class="type">?cut:bool -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; string</code></pre>
+<pre><span id="VALstring_of_name"><span class="keyword">val</span> string_of_name</span> : <code class="type">string * string -&gt; string</code></pre>
+<pre><span id="VALstring_of_atts"><span class="keyword">val</span> string_of_atts</span> : <code class="type">string Nmap.t -&gt; string</code></pre>
+<pre><span id="VALstring_of_path"><span class="keyword">val</span> string_of_path</span> : <code class="type"><a href="Xmldiff.html#TYPEpatch_path">patch_path</a> -&gt; string</code></pre>
+<pre><span id="VALstring_of_patch_operation"><span class="keyword">val</span> string_of_patch_operation</span> : <code class="type"><a href="Xmldiff.html#TYPEpatch_path">patch_path</a> * <a href="Xmldiff.html#TYPEpatch_operation">patch_operation</a> -&gt; string</code></pre>
+<pre><span id="VALstring_of_patch"><span class="keyword">val</span> string_of_patch</span> : <code class="type"><a href="Xmldiff.html#TYPEpatch">patch</a> -&gt; string</code></pre></div></contents></ocamldoc>
