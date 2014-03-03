@@ -43,7 +43,12 @@ type operation =
   | DeleteTree of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
 
-type cost_fun = operation -> cost
+type cost_funs = {
+    cost_insert : int -> xmltree -> cost ;
+    cost_delete : int -> xmltree -> cost ;
+    cost_edit : (label * xmltree) -> (label * xmltree) -> cost ;
+  }
+
 
 type actions = cost * operation list
 
@@ -55,7 +60,7 @@ type patch_operation =
   PInsertTree of xmltree
 | PDeleteTree
 | PUpdateCData of string
-| PUpdateNode of Xmlm.name * string Nmap.t * xmltree list
+| PUpdateNode of Xmlm.name * string Nmap.t
 | PReplace of xmltree
 
 type patch = (patch_path * patch_operation) list
@@ -63,8 +68,16 @@ type patch = (patch_path * patch_operation) list
 let min_action (c1, l1) (c2, l2) =
   if c1 <= c2 then (c1, l1) else (c2, l2)
 
+let cost_action fc = function
+| InsertTree (node, _) -> fc.cost_insert node.size node.xml
+| DeleteTree node -> fc.cost_delete node.size node.xml
+| Edit (node1, node2) ->
+    fc.cost_edit (node1.label, node1.xml) (node2.label, node2.xml)
+| Replace _ -> 1
+;;
+
 let add_action (c,l) fc action =
-  let ca = fc action in
+  let ca = cost_action fc action in
   if ca = 0 then (c, l) else (c+ca, action :: l)
 ;;
 
@@ -384,8 +397,8 @@ let patch_xmlnode t path op =
     | _, PInsertTree tree -> [xml] @ [xmlnode_of_xmltree tree]
     | _, PDeleteTree -> []
     | (x, _), PUpdateCData s -> [(x, D s)]
-    | (x, D _), PUpdateNode (name, atts, _) -> [x, E (name,atts,[])]
-    | (x, E(_,_,subs)), PUpdateNode (name, atts, _) -> [x, E(name,atts,subs)]
+    | (x, D _), PUpdateNode (name, atts) -> [x, E (name,atts,[])]
+    | (x, E(_,_,subs)), PUpdateNode (name, atts) -> [x, E(name,atts,subs)]
   in
   let rec iter xmls path =
     match xmls, path with
@@ -432,8 +445,8 @@ let patch_of_action (t1, patch) = function
     let op =
       match n1.xml, n2.xml with
         _ , D s2 -> PUpdateCData s2
-      | E(_,_,_), E(name,atts,_) -> PUpdateNode (name, atts, [])
-      | D _, E(name,atts,subs) -> PUpdateNode (name, atts, subs)
+      | E(_,_,_), E(name,atts,_) -> PUpdateNode (name, atts)
+      | D _, E(name,atts,subs) -> PUpdateNode (name, atts)
     in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
@@ -492,20 +505,20 @@ let string_of_patch_operation (path, op) =
       "DELETE_TREE("^(string_of_path path)^")"
   | PUpdateCData s ->
       Printf.sprintf "UPDATE_CDATA(%s, %S)" (string_of_path path) s
-  | PUpdateNode (name, atts, subs) ->
-      Printf.sprintf "UPDATE_NODE(%s, %S, _, _)" (string_of_path path) (string_of_name name)
+  | PUpdateNode (name, atts) ->
+      Printf.sprintf "UPDATE_NODE(%s, %S, _)" (string_of_path path) (string_of_name name)
 ;;
 
 let string_of_patch l =
   String.concat "\n" (List.map string_of_patch_operation l)
 ;;
 
-let default_costs = function
-    InsertTree (j,_) -> j.size
-  | DeleteTree i -> max (i.size / 4) 1
-  | Edit (n1, n2) ->
-      if n1.label = n2.label then 0 else 1
-  | Replace _ -> 1
+let default_costs = {
+    cost_insert = (fun size _ -> size) ;
+    cost_delete = (fun size _ -> max (size / 4) 1) ;
+    cost_edit = (fun (label1, _) (label2, _) ->
+       if label1 = label2 then 0 else 1) ;
+  }
 ;;
 
 let diff ?(fcost=default_costs) xml1 xml2 =

@@ -52,6 +52,9 @@ xmldiff.cmo: xmldiff.cmi xmldiff.ml
 xmldiff.cmi: xmldiff.mli
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) $<
 
+test-xmldiff: xmldiff.cmx test_xmldiff.ml
+	$(OCAMLFIND) ocamlopt $(OF_FLAGS) $(COMPFLAGS) -o $@ -linkpkg $^
+
 ##########
 .PHONY: doc
 doc:
