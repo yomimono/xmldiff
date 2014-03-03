@@ -33,7 +33,7 @@
   We implement the first extension of Zhang and Shasha and remove the
   InsertNode and DeleteNode operations: they can be replaced by InsertTree and
   DeleteTree (even if not exactly the same) and the semantic of InsertNode
-  is not clear (where do we insert ?)
+  is not clear (where do we insert ?).
   Besides, it is easier to write the cost function if there is only
   one operation to insert and one to delete.
 *)
@@ -74,7 +74,7 @@ type cost_funs = {
         taken into account for this operation. *)
   }
 
-(** A path to a place in an XML tree where to perform an operation. *)
+(** A path to a node in an XML tree where to perform an operation. *)
 type patch_path =
     Path_cdata of int (** [Path_cdata n] refers to the [n]th CData leaf. *)
   | Path_node of Xmlm.name * int * patch_path option
@@ -107,7 +107,7 @@ val default_costs : cost_funs
 
 (** [diff t1 t2] returns the pair [(c, p)], with [c] being the cost
   to change [t1] into [t2] and [p] the corresponding patch.
-  @fcost can be used to specify alternative cost functions. *)
+  @param fcost can be used to specify alternative cost functions. *)
 val diff :
   ?fcost: cost_funs ->
   xmltree -> xmltree -> int * patch

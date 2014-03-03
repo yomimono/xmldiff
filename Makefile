@@ -59,7 +59,7 @@ test-xmldiff: xmldiff.cmx test_xmldiff.ml
 .PHONY: doc
 doc:
 	$(MKDIR) doc
-	$(OCAMLDOC) $(INCLUDES) xmldiff.mli -t Xtmpl -d doc -html
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli -t Xtmpl -d doc -html
 
 webdoc: doc
 	$(MKDIR) ../xmldiff-gh-pages/refdoc
