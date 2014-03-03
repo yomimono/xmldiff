@@ -23,7 +23,8 @@
 #                                                                               #
 #################################################################################
 
-VERSION=0.1 # DO NOT FORGET TO BUMP VERSION NUMBER IN META TOO
+# DO NOT FORGET TO BUMP VERSION NUMBER IN META TOO
+VERSION=0.1
 
 PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
