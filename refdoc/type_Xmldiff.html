@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<title>Xmldiff : Xmldiff : Xmldiff</title>
+<link href="http://zoggy.github.io/xmldiff/style.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="page">
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+
+
+  <div class="nav-collapse">
+    <ul class="nav">
+    <li class="&lt;navbar-home/&gt;"><a href="http://zoggy.github.io/xmldiff/index.html">Xml-diff</a></li>
+    <li class="active"><a href="http://zoggy.github.io/xmldiff/refdoc">Documentation</a></li>
+
+  </ul>
+  <div class="nav pull-right">  </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div id="header">
+  
+  
+  
+</div>
+
+
+
+<div class="ocamldoc-page">
+<code class="code"><span class="keyword">sig</span><br/>
+  <span class="keyword">type</span> name = <span class="constructor">Xmlm</span>.name<br/>
+  <span class="keyword">module</span> <span class="constructor">Nmap</span> :<br/>
+    <span class="keyword">sig</span><br/>
+      <span class="keyword">type</span> key = name<br/>
+      <span class="keyword">type</span> +<span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> empty : <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> is_empty : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> bool<br/>
+      <span class="keyword">val</span> mem : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> bool<br/>
+      <span class="keyword">val</span> add : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> singleton : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> remove : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> merge :<br/>
+        (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a option <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b option <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>c option) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>c t<br/>
+      <span class="keyword">val</span> compare : (<span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> int) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> int<br/>
+      <span class="keyword">val</span> equal : (<span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> bool<br/>
+      <span class="keyword">val</span> iter : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> unit) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> unit<br/>
+      <span class="keyword">val</span> fold : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b<br/>
+      <span class="keyword">val</span> for_all : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> bool<br/>
+      <span class="keyword">val</span> exists : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> bool<br/>
+      <span class="keyword">val</span> filter : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> partition : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t * <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> cardinal : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> int<br/>
+      <span class="keyword">val</span> bindings : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> (key * <span class="keywordsign">'</span>a) list<br/>
+      <span class="keyword">val</span> min_binding : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> key * <span class="keywordsign">'</span>a<br/>
+      <span class="keyword">val</span> max_binding : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> key * <span class="keywordsign">'</span>a<br/>
+      <span class="keyword">val</span> choose : <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> key * <span class="keywordsign">'</span>a<br/>
+      <span class="keyword">val</span> split : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t * <span class="keywordsign">'</span>a option * <span class="keywordsign">'</span>a t<br/>
+      <span class="keyword">val</span> find : key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a<br/>
+      <span class="keyword">val</span> map : (<span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b t<br/>
+      <span class="keyword">val</span> mapi : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b t<br/>
+    <span class="keyword">end</span><br/>
+  <span class="keyword">type</span> <span class="keywordsign">'</span>a xmlt =<br/>
+      <span class="constructor">E</span> <span class="keyword">of</span> <span class="constructor">Xmldiff</span>.name * string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t * <span class="keywordsign">'</span>a list<br/>
+    <span class="keywordsign">|</span> <span class="constructor">D</span> <span class="keyword">of</span> string<br/>
+  <span class="keyword">type</span> xmltree = <span class="constructor">Xmldiff</span>.xmltree <span class="constructor">Xmldiff</span>.xmlt<br/>
+  <span class="keyword">type</span> cost = int<br/>
+  <span class="keyword">type</span> label = <span class="constructor">Node</span> <span class="keyword">of</span> string <span class="keywordsign">|</span> <span class="constructor">Text</span> <span class="keyword">of</span> string<br/>
+  <span class="keyword">type</span> cost_funs = {<br/>
+    cost_insert : int <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.cost;<br/>
+    cost_delete : int <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.cost;<br/>
+    cost_edit :<br/>
+      <span class="constructor">Xmldiff</span>.label * <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span><br/>
+      <span class="constructor">Xmldiff</span>.label * <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.cost;<br/>
+  }<br/>
+  <span class="keyword">type</span> patch_path =<br/>
+      <span class="constructor">Path_cdata</span> <span class="keyword">of</span> int<br/>
+    <span class="keywordsign">|</span> <span class="constructor">Path_node</span> <span class="keyword">of</span> <span class="constructor">Xmlm</span>.name * int * <span class="constructor">Xmldiff</span>.patch_path option<br/>
+  <span class="keyword">type</span> patch_operation =<br/>
+      <span class="constructor">PInsertTree</span> <span class="keyword">of</span> <span class="constructor">Xmldiff</span>.xmltree<br/>
+    <span class="keywordsign">|</span> <span class="constructor">PDeleteTree</span><br/>
+    <span class="keywordsign">|</span> <span class="constructor">PUpdateCData</span> <span class="keyword">of</span> string<br/>
+    <span class="keywordsign">|</span> <span class="constructor">PUpdateNode</span> <span class="keyword">of</span> <span class="constructor">Xmlm</span>.name * string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t<br/>
+    <span class="keywordsign">|</span> <span class="constructor">PReplace</span> <span class="keyword">of</span> <span class="constructor">Xmldiff</span>.xmltree<br/>
+  <span class="keyword">type</span> patch = (<span class="constructor">Xmldiff</span>.patch_path * <span class="constructor">Xmldiff</span>.patch_operation) list<br/>
+  <span class="keyword">val</span> default_costs : <span class="constructor">Xmldiff</span>.cost_funs<br/>
+  <span class="keyword">val</span> diff :<br/>
+    ?fcost:<span class="constructor">Xmldiff</span>.cost_funs <span class="keywordsign">-&gt;</span><br/>
+    <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> int * <span class="constructor">Xmldiff</span>.patch<br/>
+  <span class="keyword">val</span> xml_of_string : string <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree<br/>
+  <span class="keyword">val</span> xml_of_file : string <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree<br/>
+  <span class="keyword">val</span> atts_of_map : string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t <span class="keywordsign">-&gt;</span> (<span class="constructor">Xmldiff</span>.name * string) list<br/>
+  <span class="keyword">val</span> string_of_xml : ?cut:bool <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> string<br/>
+  <span class="keyword">val</span> string_of_name : string * string <span class="keywordsign">-&gt;</span> string<br/>
+  <span class="keyword">val</span> string_of_atts : string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t <span class="keywordsign">-&gt;</span> string<br/>
+  <span class="keyword">val</span> string_of_path : <span class="constructor">Xmldiff</span>.patch_path <span class="keywordsign">-&gt;</span> string<br/>
+  <span class="keyword">val</span> string_of_patch_operation :<br/>
+    <span class="constructor">Xmldiff</span>.patch_path * <span class="constructor">Xmldiff</span>.patch_operation <span class="keywordsign">-&gt;</span> string<br/>
+  <span class="keyword">val</span> string_of_patch : <span class="constructor">Xmldiff</span>.patch <span class="keywordsign">-&gt;</span> string<br/>
+<span class="keyword">end</span></code></div>
+
+
+
+
+
+
+
+
+</div> 
+</body>
+</html>
