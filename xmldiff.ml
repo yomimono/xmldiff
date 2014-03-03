@@ -57,7 +57,6 @@ type cost_funs = {
     cost_edit : (label * xmltree) -> (label * xmltree) -> cost ;
   }
 
-
 type actions = cost * operation list
 
 type patch_path =
