@@ -61,11 +61,14 @@ doc:
 	$(MKDIR) doc
 	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli -t Xmldiff -d doc -html
 
-webdoc: doc
-	$(MKDIR) ../xmldiff-gh-pages/refdoc
-	$(CP) doc/* ../xmldiff-gh-pages/refdoc/
-	$(CP) web/index.html web/style.css ../xmldiff-gh-pages/
+docstog:
+	$(MKDIR) web/refdoc
+	$(OCAMLFIND) ocamldoc.opt $(OF_FLAGS) -rectypes xmldiff.mli \
+	-t Xmldiff -d web/refdoc -g odoc_stog.cmxs
 
+webdoc:
+	$(MAKE) docstog
+	cd web && $(MAKE)
 
 ##########
 install: xmldiff.cmo xmldiff.cmx xmldiff.cmxs
