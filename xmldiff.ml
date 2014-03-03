@@ -1,6 +1,14 @@
 (** *)
 
-module Nmap = Xtmpl.Name_map
+module Nmap =
+ Map.Make (
+   struct
+     type t = string * string
+     let compare (p1, s1) (p2, s2) =
+       match String.compare p1 p2 with
+         0 -> String.compare s1 s2
+       | n -> n
+   end)
 
 type name = Xmlm.name
 type 'a xmlt =

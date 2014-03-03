@@ -25,7 +25,7 @@
 
 VERSION=0.1
 
-PACKAGES=xmlm,xtmpl
+PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
 COMPFLAGS=-annot -rectypes -g
 OCAMLPP=
@@ -59,7 +59,7 @@ test-xmldiff: xmldiff.cmx test_xmldiff.ml
 .PHONY: doc
 doc:
 	$(MKDIR) doc
-	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli -t Xtmpl -d doc -html
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli -t Xmldiff -d doc -html
 
 webdoc: doc
 	$(MKDIR) ../xmldiff-gh-pages/refdoc
@@ -82,7 +82,7 @@ archive:
 
 #####
 clean:
-	$(RM) *.cm* *.o *.annot *.a
+	$(RM) *.cm* *.o *.annot *.a test-xmldiff
 
 # headers :
 ###########

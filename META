@@ -1,6 +1,6 @@
 version = "0.1"
 description = "Diffs on XML trees"
-requires = "xtmpl"
+requires = "xmlm"
 archive(toploop) = "xmldiff.cmo"
 archive(byte) = "xmldiff.cmo"
 archive(native) = "xmldiff.cmx"
