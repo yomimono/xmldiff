@@ -270,7 +270,7 @@ let compute fc t1 t2 =
             false -> ()
           | true ->
               let ly = t2.(y).leftmost in
-              (*prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);*)
+              prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);
               fd.(lx - 1).(ly - 1) <- (0, []);
               for i = lx to x do
                 let op = DeleteTree t1.(i) in
@@ -486,10 +486,12 @@ let patch_of_actions t1 t2 l =
   let t1 = xmlnode_of_t t1 in
   let actions = mk_replace l in
   let (t1, l) = List.fold_left patch_of_action (t1, []) actions in
+  (*
   let t1 = xmltree_of_xmlnode t1 in
   let t2 = xmltree_of_xmlnode (xmlnode_of_t t2) in
   file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1);
   file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2);
+  *)
   List.rev l
 ;;
 
@@ -532,8 +534,8 @@ let diff ?(fcost=default_costs) xml1 xml2 =
   let t1 = t_of_xml xml1 in
   let t2 = t_of_xml xml2 in
   (*
-  Stog_misc.file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
-  Stog_misc.file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
+  file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
+  file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
   *)
   let cost, actions = compute fcost t1 t2 in
   (*prerr_endline ("actions="^(String.concat "\n" (List.map string_of_action actions)));*)
