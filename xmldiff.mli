@@ -110,6 +110,7 @@ val default_costs : cost_funs
   @param fcost can be used to specify alternative cost functions. *)
 val diff :
   ?fcost: cost_funs ->
+  ?cut: (name -> string Nmap.t -> xmltree list -> bool) ->
   xmltree -> xmltree -> int * patch
 
 (** {2 Utilities} *)

@@ -26,7 +26,8 @@
 let diff file1 file2 =
   let xml1 = Xmldiff.xml_of_file file1 in
   let xml2 = Xmldiff.xml_of_file file2 in
-  Xmldiff.diff xml1 xml2
+  let cut (_,tag) _ _ = String.lowercase tag = "pre" in
+  Xmldiff.diff ~cut xml1 xml2
 
 let usage = "Usage: "^Sys.argv.(0)^" file1 file2";;
 

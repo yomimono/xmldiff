@@ -205,12 +205,16 @@ let dot_of_t t =
 ;;
 
 let t_of_xml =
-  let rec iter (n0, acc, acc_children) xml =
-    let subs = match xml with
-        E (_, _, l) -> l
-      | D _ -> []
+  let rec iter ?cut (n0, acc, acc_children) xml =
+    let (label, subs) =
+      match xml with
+      | D _ -> (label_of_xml xml, [])
+      |E (tag, atts, l) ->
+          match cut with
+          | Some f when f tag atts l -> (Node (string_of_xml xml), [])
+          | _ -> (label_of_xml xml, l)
     in
-    let (n, acc, children) = List.fold_left iter (n0, acc, []) subs in
+    let (n, acc, children) = List.fold_left (iter ?cut) (n0, acc, []) subs in
     let leftmost =
       match children with
         [] -> n
@@ -220,7 +224,7 @@ let t_of_xml =
       { number = n ; leftmost ; keyroot = acc_children <> [] ;
         child = Array.of_list (List.map (fun node -> node.number) children) ;
         parent = None ;
-        xml ; label = label_of_xml xml ;
+        xml ; label ;
         size = n - n0 + 1 ;
       }
     in
@@ -228,8 +232,8 @@ let t_of_xml =
     let acc = match children with [] -> acc | _ -> acc @ children in
     (n+1, acc, acc_children @ [node])
   in
-  fun xml ->
-    let (_, l, root) = iter (1, [], []) xml in
+  fun ?cut xml ->
+    let (_, l, root) = iter ?cut (1, [], []) xml in
     let t = Array.of_list (l @ root) in
     Array.sort (fun n1 n2 -> n1.number - n2.number) t;
     let t = Array.append
@@ -270,7 +274,7 @@ let compute fc t1 t2 =
             false -> ()
           | true ->
               let ly = t2.(y).leftmost in
-              prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);
+              (*prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);*)
               fd.(lx - 1).(ly - 1) <- (0, []);
               for i = lx to x do
                 let op = DeleteTree t1.(i) in
@@ -530,9 +534,9 @@ let default_costs = {
   }
 ;;
 
-let diff ?(fcost=default_costs) xml1 xml2 =
-  let t1 = t_of_xml xml1 in
-  let t2 = t_of_xml xml2 in
+let diff ?(fcost=default_costs) ?cut xml1 xml2 =
+  let t1 = t_of_xml ?cut xml1 in
+  let t2 = t_of_xml ?cut xml2 in
   (*
   file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
