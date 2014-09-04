@@ -28,6 +28,7 @@ type node = {
   xml : xmltree ;
   size : int ;
   label : label ;
+  can_update : bool ;
   }
 
 let xmlnode_of_t t =
@@ -206,13 +207,13 @@ let dot_of_t t =
 
 let t_of_xml =
   let rec iter ?cut (n0, acc, acc_children) xml =
-    let (label, subs) =
+    let (label, subs, can_update) =
       match xml with
-      | D _ -> (label_of_xml xml, [])
+      | D _ -> (label_of_xml xml, [], true)
       |E (tag, atts, l) ->
           match cut with
-          | Some f when f tag atts l -> (Node (string_of_xml xml), [])
-          | _ -> (label_of_xml xml, l)
+          | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
+          | _ -> (label_of_xml xml, l, true)
     in
     let (n, acc, children) = List.fold_left (iter ?cut) (n0, acc, []) subs in
     let leftmost =
@@ -226,6 +227,7 @@ let t_of_xml =
         parent = None ;
         xml ; label ;
         size = n - n0 + 1 ;
+        can_update ;
       }
     in
     let children = List.map (fun node -> { node with parent = Some n }) children in
@@ -240,7 +242,8 @@ let t_of_xml =
       [| {
          number = -1 ; leftmost = -1 ; keyroot = false ;
          child = [| |] ; parent = None ;
-         xml = D ""; size = 0 ; label = Text "dummy" } ; |]
+         xml = D ""; size = 0 ; label = Text "dummy" ;
+         can_update = true } |]
         t
     in
     (* set root node as keyroot *)
@@ -454,11 +457,14 @@ let patch_of_action (t1, patch) = function
 | Edit (n1, n2) ->
     let path = path_of_id t1 n1.number in
     let op =
-      match n1.xml, n2.xml with
-        _ , D s2 -> PUpdateCData s2
-      | E(_,_,_), E(name,atts,_) -> PUpdateNode (name, atts)
-      | D _, E(name,atts,subs) -> PUpdateNode (name, atts)
-    in
+      if n1.can_update then
+        match n1.xml, n2.xml with
+          _ , D s2 -> PUpdateCData s2
+        | E(_,_,_), E(name,atts,_) -> PUpdateNode (name, atts)
+        | D _, E(name,atts,subs) -> PUpdateNode (name, atts)
+      else
+        PReplace n2.xml
+    in    
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
 ;;
