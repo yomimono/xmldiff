@@ -38,7 +38,6 @@
   one operation to insert and one to delete.
 *)
 
-
 type name = Xmlm.name
   (** [= string * string] . Representation
      of tags and attribute names. *)
@@ -47,9 +46,15 @@ type name = Xmlm.name
 module Nmap : Map.S with type key = name
 
 (** XML tree. The type is parametrized because it is shared
-  with an internal richer representation. *)
+  with an internal richer representation.
+  Defined as
+  {[type 'a xmlt = [
+| `E of name * string Nmap.t * 'a list (** A node [(tag, attributes, children)] *)
+| `D of string (** CDATA leaf *)
+]  ]}
+*)
 type 'a xmlt = [
-  `E of name * string Nmap.t * 'a list (** A node [(tag, attributes, children)] *)
+| `E of name * string Nmap.t * 'a list (** A node [(tag, attributes, children)] *)
 | `D of string (** CDATA leaf *)
 ]
 ;;
