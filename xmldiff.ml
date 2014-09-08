@@ -210,7 +210,7 @@ let t_of_xml =
     let (label, subs, can_update) =
       match xml with
       | D _ -> (label_of_xml xml, [], true)
-      |E (tag, atts, l) ->
+      | E (tag, atts, l) ->
           match cut with
           | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
           | _ -> (label_of_xml xml, l, true)
@@ -464,7 +464,7 @@ let patch_of_action (t1, patch) = function
         | D _, E(name,atts,subs) -> PUpdateNode (name, atts)
       else
         PReplace n2.xml
-    in    
+    in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
 ;;
@@ -477,6 +477,7 @@ let rec xmltree_of_xmlnode = function
 let mk_replace =
   let rec iter acc = function
   | [] -> List.rev acc
+  | InsertTree(n2,0) :: q -> iter (Replace(n2,1)::acc) q
   | InsertTree(n2,i) :: DeleteTree j :: q when j.number = i ->
       iter (Replace (n2, i) :: acc) q
   | h :: q ->
@@ -548,7 +549,9 @@ let diff ?(fcost=default_costs) ?cut xml1 xml2 =
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
   *)
   let cost, actions = compute fcost t1 t2 in
-  (*prerr_endline ("actions="^(String.concat "\n" (List.map string_of_action actions)));*)
+  (*
+  prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
+  *)
   let patch = patch_of_actions t1 t2 actions in
   (cost, patch)
 ;;
