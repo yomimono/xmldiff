@@ -44,6 +44,17 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <div class="subsection"><div class="subsection-title" id="releases">Releases</div>
 <ul>
+<li><a href="xmldiff-0.2.tar.gz">0.2</a> [2014-09-08]:
+<ul>
+<li>Fix <span class="ext-a"><a href="https://github.com/zoggy/xmldiff/issues/2">#2</a></span>:
+  error when comparing <span class="icode"><span class="hl kwa">&lt;foo</span><span class="hl kwa">/&gt;</span></span> to
+  <span class="icode"><span class="hl kwa">&lt;foo</span><span class="hl kwa">&gt;</span><span class="hl kwa">&lt;bar</span><span class="hl kwa">/&gt;</span><span class="hl kwa">&lt;/foo</span><span class="hl kwa">&gt;</span></span>,</li>
+<li>use polymorphic variants not to require <span class="icode"><span class="hl std">-rectypes</span></span> flag,</li>
+<li>compile and install <span class="icode"><span class="hl std">xmldiff.cmti</span></span>,</li>
+<li>new parameter <span class="icode"><span class="hl kw4">~cut</span></span> for <span class="icode"><span class="hl kwc">Xmldiff</span><span class="hl std">.</span><span class="">diff</span></span> to quicken the comparison
+  by lowering precision under some tags.</li>
+</ul>
+</li>
 <li><a href="xmldiff-0.1.tar.gz">0.1</a> [2014-03-03]: Initial release.</li>
 </ul>
 </div>
@@ -87,7 +98,7 @@ Maxence Guesdon <tt>&lt;Maxence 'DOT' Guesdon 'AT' inria 'DOT' fr&gt;</tt>
 
 
 
-<eltcode></eltcode>
+<doccode></doccode>
 
 
 

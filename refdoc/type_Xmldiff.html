@@ -67,8 +67,7 @@
       <span class="keyword">val</span> mapi : (key <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b) <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>a t <span class="keywordsign">-&gt;</span> <span class="keywordsign">'</span>b t<br/>
     <span class="keyword">end</span><br/>
   <span class="keyword">type</span> <span class="keywordsign">'</span>a xmlt =<br/>
-      <span class="constructor">E</span> <span class="keyword">of</span> <span class="constructor">Xmldiff</span>.name * string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t * <span class="keywordsign">'</span>a list<br/>
-    <span class="keywordsign">|</span> <span class="constructor">D</span> <span class="keyword">of</span> string<br/>
+      [ <span class="keywordsign">`</span><span class="constructor">D</span> <span class="keyword">of</span> string <span class="keywordsign">|</span> <span class="keywordsign">`</span><span class="constructor">E</span> <span class="keyword">of</span> <span class="constructor">Xmldiff</span>.name * string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t * <span class="keywordsign">'</span>a list ]<br/>
   <span class="keyword">type</span> xmltree = <span class="constructor">Xmldiff</span>.xmltree <span class="constructor">Xmldiff</span>.xmlt<br/>
   <span class="keyword">type</span> cost = int<br/>
   <span class="keyword">type</span> label = <span class="constructor">Node</span> <span class="keyword">of</span> string <span class="keywordsign">|</span> <span class="constructor">Text</span> <span class="keyword">of</span> string<br/>
@@ -92,6 +91,8 @@
   <span class="keyword">val</span> default_costs : <span class="constructor">Xmldiff</span>.cost_funs<br/>
   <span class="keyword">val</span> diff :<br/>
     ?fcost:<span class="constructor">Xmldiff</span>.cost_funs <span class="keywordsign">-&gt;</span><br/>
+    ?cut:(<span class="constructor">Xmldiff</span>.name <span class="keywordsign">-&gt;</span><br/>
+          string <span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree list <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span><br/>
     <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> int * <span class="constructor">Xmldiff</span>.patch<br/>
   <span class="keyword">val</span> xml_of_string : string <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree<br/>
   <span class="keyword">val</span> xml_of_file : string <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.xmltree<br/>

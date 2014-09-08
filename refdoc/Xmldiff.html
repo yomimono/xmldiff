@@ -68,22 +68,7 @@ Computing diffs on XML trees.
 Mapping over names.
 </div>
 
-<pre><code><span id="TYPExmlt"><span class="keyword">type</span> <code class="type">'a</code> xmlt</span> = </code></pre><table class="typetable">
-<tr>
-<td align="left" valign="top">
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top">
-<code><span id="TYPEELTxmlt.E"><span class="constructor">E</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPEname">name</a> * string Nmap.t * 'a list</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">A node <code class="code">(tag, attributes, children)</code></td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
-</tr>
-<tr>
-<td align="left" valign="top">
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top">
-<code><span id="TYPEELTxmlt.D"><span class="constructor">D</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">CDATA leaf</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
-</tr></table>
-
+<pre><span id="TYPExmlt"><span class="keyword">type</span> <code class="type">'a</code> xmlt</span> = <code class="type">[ `D of string | `E of <a href="Xmldiff.html#TYPEname">name</a> * string Nmap.t * 'a list ]</code> </pre>
 <div class="info">
 XML tree. The type is parametrized because it is shared
   with an internal richer representation.<br/>
@@ -229,11 +214,17 @@ For example, if insertions and deletions are cheap, the algorithm
 will return a single operation replacing the first tree by the second one.<br/>
 </div>
 
-<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">?fcost:<a href="Xmldiff.html#TYPEcost_funs">cost_funs</a> -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; int * <a href="Xmldiff.html#TYPEpatch">patch</a></code></pre><div class="info">
+<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">?fcost:<a href="Xmldiff.html#TYPEcost_funs">cost_funs</a> -&gt;<br/>       ?cut:(<a href="Xmldiff.html#TYPEname">name</a> -&gt; string Nmap.t -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> list -&gt; bool) -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; int * <a href="Xmldiff.html#TYPEpatch">patch</a></code></pre><div class="info">
 <code class="code">diff t1 t2</code> returns the pair <code class="code">(c, p)</code>, with <code class="code">c</code> being the cost
   to change <code class="code">t1</code> into <code class="code">t2</code> and <code class="code">p</code> the corresponding patch.<br/>
 </div>
 <div class="param_info"><code class="code">fcost</code> : can be used to specify alternative cost functions.</div>
+<div class="param_info"><code class="code">cut</code> : is called on XML tree tag nodes; returning <code class="code">true</code> means
+  that that subnodes won't be compared separately, but the whole node
+  will be compared as is. This is useful in case of big XML trees, otherwise
+  a lot of comparisons are done between the two trees. For example,
+  one can cut on &quot;p&quot;, &quot;pre&quot;, &quot;ul&quot; and &quot;code&quot; tags in a regular web page.
+  Default behaviour is to cut nothing.</div>
 <br/>
 <div class="section-title" id="2_Utilities">Utilities</div><br/>
 
