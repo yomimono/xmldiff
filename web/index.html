@@ -9,6 +9,7 @@ with-contents="true"
 section-counter="false"
 subsection-counter="false"
 >
+<ml foo=""><icode defer_="1" lang="ocaml"><contents/></icode></ml>
 <contents>
 <p>
 Xmldiff is an OCaml library to compute diffs on XML trees.
@@ -20,6 +21,17 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <subsection id="releases" title="Releases">
 <ul>
+<li><a href="xmldiff-0.2.tar.gz">0.2</a> [2014-09-08]:
+<ul>
+<li>Fix <ext-a href="https://github.com/zoggy/xmldiff/issues/2">#2</ext-a>:
+  error when comparing <icode lang="xml"><![CDATA[<foo/>]]></icode> to
+  <icode lang="xml"><![CDATA[<foo><bar/></foo>]]></icode>,</li>
+<li>use polymorphic variants not to require <icode>-rectypes</icode> flag,</li>
+<li>compile and install <icode>xmldiff.cmti</icode>,</li>
+<li>new parameter <ml>~cut</ml> for <ml>Xmldiff.diff</ml> to quicken the comparison
+  by lowering precision under some tags.</li>
+</ul>
+</li>
 <li><a href="xmldiff-0.1.tar.gz">0.1</a> [2014-03-03]: Initial release.</li>
 </ul>
 </subsection>
