@@ -28,7 +28,7 @@ VERSION=0.2
 
 PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
-COMPFLAGS=-annot -g
+COMPFLAGS=-annot -bin-annot -g
 OCAMLPP=
 
 OCAMLFIND=ocamlfind
@@ -50,7 +50,7 @@ xmldiff.cmxs: xmldiff.cmx
 xmldiff.cmo: xmldiff.cmi xmldiff.ml
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) xmldiff.ml
 
-xmldiff.cmi: xmldiff.mli
+xmldiff.cmi xmldiff.cmti: xmldiff.mli
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) $<
 
 test-xmldiff: xmldiff.cmx test_xmldiff.ml
@@ -74,7 +74,8 @@ webdoc:
 ##########
 install: xmldiff.cmo xmldiff.cmx xmldiff.cmxs
 	ocamlfind install xmldiff META LICENSE \
-		xmldiff.cmi xmldiff.mli xmldiff.cmo xmldiff.cmx xmldiff.cmxs xmldiff.o
+		xmldiff.cmi xmldiff.cmti xmldiff.mli xmldiff.cmo \
+		xmldiff.cmx xmldiff.cmxs xmldiff.o
 
 uninstall:
 	ocamlfind remove xmldiff
