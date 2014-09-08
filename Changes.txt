@@ -1,0 +1,8 @@
+Release 0.2:
+- #2: error when comparing <foo/> to <foo><bar/></foo>
+- use polymorphic variants not to require -rectypes flag
+- compile and install xmldiff .cmti
+- new parameter ~cut for Xmldiff.diff to quicken the comparison
+  by lowering precision under some tags.
+
+

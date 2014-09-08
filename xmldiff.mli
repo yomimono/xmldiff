@@ -108,7 +108,14 @@ val default_costs : cost_funs
 
 (** [diff t1 t2] returns the pair [(c, p)], with [c] being the cost
   to change [t1] into [t2] and [p] the corresponding patch.
-  @param fcost can be used to specify alternative cost functions. *)
+  @param fcost can be used to specify alternative cost functions.
+  @param cut is called on XML tree tag nodes; returning [true] means
+  that that subnodes won't be compared separately, but the whole node
+  will be compared as is. This is useful in case of big XML trees, otherwise
+  a lot of comparisons are done between the two trees. For example,
+  one can cut on "p", "pre", "ul" and "code" tags in a regular web page.
+  Default behaviour is to cut nothing.
+*)
 val diff :
   ?fcost: cost_funs ->
   ?cut: (name -> string Nmap.t -> xmltree list -> bool) ->
