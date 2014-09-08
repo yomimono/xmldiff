@@ -60,11 +60,11 @@ test-xmldiff: xmldiff.cmx test_xmldiff.ml
 .PHONY: doc
 doc:
 	$(MKDIR) doc
-	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli -t Xmldiff -d doc -html
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) xmldiff.mli -t Xmldiff -d doc -html
 
 docstog:
 	$(MKDIR) web/refdoc
-	$(OCAMLFIND) ocamldoc $(OF_FLAGS) -rectypes xmldiff.mli \
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) xmldiff.mli \
 	-t Xmldiff -d web/refdoc -g odoc_stog.cmo
 
 webdoc:
