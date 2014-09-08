@@ -263,9 +263,13 @@ let t_of_xml =
 
 let compute fc t1 t2 =
   (* forest distance *)
-  let fd = Array.init (Array.length t1) (fun i -> Array.create (Array.length t2) (0,[])) in
+  let fd = Array.init (Array.length t1)
+    (fun i -> Array.make (Array.length t2) (0,[]))
+  in
   (* tree distance *)
-  let d = Array.init (Array.length t1) (fun i -> Array.create (Array.length t2) (0,[])) in
+  let d = Array.init (Array.length t1)
+    (fun i -> Array.make (Array.length t2) (0,[]))
+  in
 
   for x = 1 to Array.length t1 - 1 do
     match t1.(x).keyroot with
