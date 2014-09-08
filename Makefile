@@ -28,7 +28,7 @@ VERSION=0.2
 
 PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
-COMPFLAGS=-annot -rectypes -g
+COMPFLAGS=-annot -g
 OCAMLPP=
 
 OCAMLFIND=ocamlfind

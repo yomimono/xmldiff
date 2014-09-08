@@ -11,9 +11,9 @@ module Nmap =
    end)
 
 type name = Xmlm.name
-type 'a xmlt =
-    E of name * string Nmap.t * 'a list
-  | D of string
+type 'a xmlt = [
+    `E of name * string Nmap.t * 'a list
+  | `D of string ]
 type xmltree = xmltree xmlt
 type xmlnode = int option * xmlnode xmlt
 
@@ -36,10 +36,10 @@ let xmlnode_of_t t =
   let rec build n =
     let xml = t.(n).xml in
     match xml with
-      D s -> (Some n, D s)
-    | E (tag,atts,_) ->
+      `D s -> (Some n, `D s)
+    | `E (tag,atts,_) ->
         let children = List.map build (Array.to_list t.(n).child) in
-        (Some n, E (tag, atts, children))
+        (Some n, `E (tag, atts, children))
   in
   build (len-1)
 ;;
@@ -99,9 +99,9 @@ let rec xml_of_source s_source source =
       let atts = List.fold_left
         (fun map (name, v) -> Nmap.add name v map) Nmap.empty atts
       in
-      E (tag, atts, childs)
+      `E (tag, atts, childs)
     in
-    let data d = D d in
+    let data d = `D d in
     let (_, tree) = Xmlm.input_doc_tree ~el ~data input in
     tree
   with
@@ -143,8 +143,8 @@ let string_of_xml ?(cut=false) tree =
   let tree =
     if cut then
       match tree with
-        D _ -> tree
-      | E(name,atts,_) -> E(name,atts,[])
+        `D _ -> tree
+      | `E (name,atts,_) -> `E (name,atts,[])
     else
       tree
   in
@@ -152,10 +152,10 @@ let string_of_xml ?(cut=false) tree =
   let ns_prefix s = Some s in
   let output = Xmlm.make_output ~ns_prefix ~decl: false (`Buffer b) in
   let frag = function
-  | E (tag, atts, childs) ->
+  | `E (tag, atts, childs) ->
       let atts = atts_of_map atts in
       `El ((tag, atts), childs)
-  | D d -> `Data d
+  | `D d -> `Data d
   in
   Xmlm.output_doc_tree frag output (None, tree);
   Buffer.contents b
@@ -177,16 +177,16 @@ let string_of_atts map =
 ;;
 
 let label_of_xml = function
-| D s -> Text s
-| E (tag, atts, _) ->
+| `D s -> Text s
+| `E (tag, atts, _) ->
     Node
       (Printf.sprintf "<%s %s>"
        (string_of_name tag) (string_of_atts atts))
 ;;
 
 let short_label = function
-  E ((s1,s2), _, _) -> s1^":"^s2
-| D _ -> "<pcdata>"
+  `E ((s1,s2), _, _) -> s1^":"^s2
+| `D _ -> "<pcdata>"
 ;;
 
 let dot_of_t t =
@@ -209,8 +209,8 @@ let t_of_xml =
   let rec iter ?cut (n0, acc, acc_children) xml =
     let (label, subs, can_update) =
       match xml with
-      | D _ -> (label_of_xml xml, [], true)
-      | E (tag, atts, l) ->
+      | `D _ -> (label_of_xml xml, [], true)
+      | `E (tag, atts, l) ->
           match cut with
           | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
           | _ -> (label_of_xml xml, l, true)
@@ -242,7 +242,7 @@ let t_of_xml =
       [| {
          number = -1 ; leftmost = -1 ; keyroot = false ;
          child = [| |] ; parent = None ;
-         xml = D ""; size = 0 ; label = Text "dummy" ;
+         xml = `D ""; size = 0 ; label = Text "dummy" ;
          can_update = true } |]
         t
     in
@@ -360,8 +360,8 @@ let patch_path_of_cur_path_list =
 
 let path_of_id =
   let cp_of_xml = function
-    D s -> CData
-  | E (name,_,_) -> N name
+    `D s -> CData
+  | `E (name,_,_) -> N name
   in
   let rec iter i path cur_path = function
   | (Some j, xml) when i = j ->
@@ -371,8 +371,8 @@ let path_of_id =
         patch_path_of_cur_path_list (List.rev path)
       end
   | (Some j, _) when j < i -> raise Not_found
-  | (_, D _) -> raise Not_found
-  | (_, E (name, atts, subs)) ->
+  | (_, `D _) -> raise Not_found
+  | (_, `E (name, atts, subs)) ->
       (* None or Some j with j > i, let's go down after
          adding cur_path to path
          *)
@@ -399,9 +399,9 @@ let path_of_id =
 ;;
 
 let rec xmlnode_of_xmltree = function
-  D s -> (None, D s)
-| E (name,atts,subs) ->
-  (None, E (name,atts, List.map xmlnode_of_xmltree subs))
+  `D s -> (None, `D s)
+| `E (name,atts,subs) ->
+  (None, `E (name,atts, List.map xmlnode_of_xmltree subs))
 ;;
 
 let patch_xmlnode t path op =
@@ -410,19 +410,19 @@ let patch_xmlnode t path op =
     | _, PReplace tree -> [xmlnode_of_xmltree tree]
     | _, PInsertTree tree -> [xml] @ [xmlnode_of_xmltree tree]
     | _, PDeleteTree -> []
-    | (x, _), PUpdateCData s -> [(x, D s)]
-    | (x, D _), PUpdateNode (name, atts) -> [x, E (name,atts,[])]
-    | (x, E(_,_,subs)), PUpdateNode (name, atts) -> [x, E(name,atts,subs)]
+    | (x, _), PUpdateCData s -> [(x, `D s)]
+    | (x, `D _), PUpdateNode (name, atts) -> [x, `E (name,atts,[])]
+    | (x, `E (_,_,subs)), PUpdateNode (name, atts) -> [x, `E (name,atts,subs)]
   in
   let rec iter xmls path =
     match xmls, path with
-      ((x, D _) as xml):: q, Path_cdata 0 -> (apply xml op) @ q
-    | (x, D s) :: q, Path_cdata n -> (x, D s) :: iter q (Path_cdata (n-1))
-    | ((x, E (name,atts,subs) as xml) :: q, Path_node (name2, n, next)) when name = name2 ->
+      ((x, `D _) as xml):: q, Path_cdata 0 -> (apply xml op) @ q
+    | (x, `D s) :: q, Path_cdata n -> (x, `D s) :: iter q (Path_cdata (n-1))
+    | ((x, `E (name,atts,subs) as xml) :: q, Path_node (name2, n, next)) when name = name2 ->
         if n = 0 then
           (match next with
              None -> (apply xml op) @ q
-           | Some p ->  [x, E (name, atts, iter subs p)] @ q
+           | Some p ->  [x, `E (name, atts, iter subs p)] @ q
           )
         else
           xml :: iter q (Path_node (name2, n-1, next))
@@ -459,9 +459,9 @@ let patch_of_action (t1, patch) = function
     let op =
       if n1.can_update then
         match n1.xml, n2.xml with
-          _ , D s2 -> PUpdateCData s2
-        | E(_,_,_), E(name,atts,_) -> PUpdateNode (name, atts)
-        | D _, E(name,atts,subs) -> PUpdateNode (name, atts)
+          _ , `D s2 -> PUpdateCData s2
+        | `E (_,_,_), `E (name,atts,_) -> PUpdateNode (name, atts)
+        | `D _, `E (name,atts,subs) -> PUpdateNode (name, atts)
       else
         PReplace n2.xml
     in
@@ -470,8 +470,8 @@ let patch_of_action (t1, patch) = function
 ;;
 
 let rec xmltree_of_xmlnode = function
-  (_, D s) -> D s
-| (_, E (tag,atts,subs)) -> E (tag, atts, List.map xmltree_of_xmlnode subs)
+  (_, `D s) -> `D s
+| (_, `E (tag,atts,subs)) -> `E (tag, atts, List.map xmltree_of_xmlnode subs)
 ;;
 
 let mk_replace =
