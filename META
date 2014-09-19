@@ -1,4 +1,4 @@
-version = "0.2"
+version = "0.3"
 description = "Diffs on XML trees"
 requires = "xmlm"
 archive(toploop) = "xmldiff.cmo"
