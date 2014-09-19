@@ -587,9 +587,7 @@ let diff ?(fcost=default_costs) ?cut xml1 xml2 =
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
 
   let cost, actions = compute fcost t1 t2 in
-
-  prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
-
+  (*prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));*)
   let patch = patch_of_actions t1 t2 actions in
   (cost, patch)
 ;;
