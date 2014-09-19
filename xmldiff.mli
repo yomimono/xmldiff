@@ -31,11 +31,11 @@
   {{:http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.62.6907}here}.
 
   We implement the first extension of Zhang and Shasha and remove the
-  InsertNode and DeleteNode operations: they can be replaced by InsertTree and
-  DeleteTree (even if not exactly the same) and the semantic of InsertNode
-  is not clear (where do we insert ?).
+  InsertNode and DeleteNode operations: they can be replaced by InsertBefore,
+  InsertAfter and DeleteTree (even if not exactly the same) and the semantic of InsertNode
+  is not clear in the article (where do we insert ?).
   Besides, it is easier to write the cost function if there is only
-  one operation to insert and one to delete.
+  one operation to insert (before or after) and one to delete.
 *)
 
 type name = Xmlm.name
@@ -85,8 +85,8 @@ type patch_path =
 (** The patch operations. Each operation is to be performed at a
   given node (position) in the tree, referenced by a {!patch_path}. *)
 type patch_operation =
-  | PInsertBefore of xmltree (** Insert the given XML tree before the referenced node. *)
-  | PInsertAfter of xmltree (** Insert the given XML tree after the referenced node. *)
+  | PInsertBefore of xmltree (** Insert the given XML tree as a left sibing of the referenced node. *)
+  | PInsertAfter of xmltree (** Insert the given XML tree as a right sibling of the referenced node. *)
   | PDeleteTree (** Delete the referenced node. *)
   | PUpdateCData of string (** Change the referenced node to a CData with the given contents. *)
   | PUpdateNode of Xmlm.name * string Nmap.t
