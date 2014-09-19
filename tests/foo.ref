@@ -1,2 +1,0 @@
-cost=2,patch=
-REPLACE(foo(0), <foo><bar/></foo>)

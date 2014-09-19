@@ -1,0 +1,2 @@
+cost=1,patch=
+UPDATE_CDATA(root(0)/CData(0), "other cdata")

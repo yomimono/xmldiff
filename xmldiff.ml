@@ -48,7 +48,8 @@ type cost = int
 
 type operation =
   | Replace of node * int
-  | InsertTree of node * int (* insert tree from t2 as a right sibling of [int] in t1 *)
+  | InsertBefore of node * int (* insert tree from t2 as a left sibling of [int] in t1 *)
+  | InsertAfter of node * int (* insert tree from t2 as a right sibling of [int] in t1 *)
   | DeleteTree of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
 
@@ -65,7 +66,8 @@ type patch_path =
 | Path_node of Xmlm.name * int * patch_path option
 
 type patch_operation =
-  PInsertTree of xmltree
+  PInsertBefore of xmltree
+| PInsertAfter of xmltree
 | PDeleteTree
 | PUpdateCData of string
 | PUpdateNode of Xmlm.name * string Nmap.t
@@ -77,7 +79,8 @@ let min_action (c1, l1) (c2, l2) =
   if c1 <= c2 then (c1, l1) else (c2, l2)
 
 let cost_action fc = function
-| InsertTree (node, _) -> fc.cost_insert node.size node.xml
+| InsertBefore (node, _)
+| InsertAfter (node, _) -> fc.cost_insert node.size node.xml
 | DeleteTree node -> fc.cost_delete node.size node.xml
 | Edit (node1, node2) ->
     fc.cost_edit (node1.label, node1.xml) (node2.label, node2.xml)
@@ -195,10 +198,10 @@ let dot_of_t t =
   p b "digraph g {\nrankdir=TB;\nordering=out;\n";
   Array.iter
     (fun node ->
-       p b "N%d [ label=\"%d: %s [%d]\", fontcolor=%s ];\n"
+       p b "\"N%d\" [ label=\"%d: %s [%d]\", fontcolor=%s ];\n"
          node.number node.number (short_label node.xml) node.leftmost
          (if node.keyroot then "red" else "black");
-       Array.iter (fun i -> p b "N%d -> N%d;\n" node.number i) node.child ;
+       Array.iter (fun i -> p b "\"N%d\" -> \"N%d\";\n" node.number i) node.child ;
     )
     t;
   p b "}\n";
@@ -261,6 +264,20 @@ let t_of_xml =
     t
 ;;
 
+
+let string_of_action = function
+| Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
+| InsertBefore (n2, i) -> Printf.sprintf "InsertBefore (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
+| InsertAfter (n2, i) -> Printf.sprintf "InsertAfter (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
+| DeleteTree n1 -> Printf.sprintf "DeleteTree(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
+| Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
+  (string_of_xml ~cut: true n1.xml) (string_of_xml ~cut: true n2.xml)
+;;
+
+let print pref i j (cost, actions) =
+  Printf.printf "%s:%d,%d: cost=%d, actions=%s\n" pref i j cost
+    (String.concat ", " (List.map string_of_action actions))
+
 let compute fc t1 t2 =
   (* forest distance *)
   let fd = Array.init (Array.length t1)
@@ -282,15 +299,16 @@ let compute fc t1 t2 =
           | true ->
               let ly = t2.(y).leftmost in
               (*prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);*)
-              fd.(lx - 1).(ly - 1) <- (0, []);
+              (*fd.(lx - 1).(ly - 1) <- (0, []);*)
               for i = lx to x do
+                (*Printf.printf "set delete t1.(%d) in fd.(%d).(%d)\n" i i (ly-1);*)
                 let op = DeleteTree t1.(i) in
                 fd.(i).(ly - 1) <- add_action
                   fd.(t1.(i).leftmost - 1).(ly - 1)
                   fc op
               done;
               for j = ly to y do
-                let op = InsertTree (t2.(y), lx - 1) in
+                let op = InsertAfter(t2.(y), lx - 1) in
                 fd.(lx - 1).(j) <- add_action
                   fd.(lx - 1).(t2.(j).leftmost - 1)
                   fc op
@@ -303,7 +321,9 @@ let compute fc t1 t2 =
                   let cost_deletetree = add_action
                     fd.(li-1).(j) fc op_deletetree
                   in
-                  let op_inserttree = InsertTree(t2.(j), i) in
+                  let op_inserttree =
+                    if j <> y then InsertAfter(t2.(j), i) else InsertBefore(t2.(j), i)
+                  in
                   let cost_inserttree = add_action
                     fd.(i).(lj-1) fc op_inserttree
                   in
@@ -322,21 +342,15 @@ let compute fc t1 t2 =
                      fd.(i).(j) <- min_action
                        part
                        (add_actions d.(i).(j) fd.(li-1).(lj-1) )
-                    )
+                    );
+                  (*print "FD" i j fd.(i).(j);*)
                 done
-              done
+              done;
         done;
   done;
   fd.(Array.length t1 - 1).(Array.length t2 - 1)
 ;;
 
-let string_of_action = function
-| Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
-| InsertTree (n2, i) -> Printf.sprintf "InsertTree (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
-| DeleteTree n1 -> Printf.sprintf "DeleteTree(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
-| Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
-  (string_of_xml ~cut: true n1.xml) (string_of_xml ~cut: true n2.xml)
-;;
 
 type cur_path = N of Xmlm.name | CData
 module Cur_path = Map.Make (struct type t = cur_path let compare = Pervasives.compare end)
@@ -412,7 +426,8 @@ let patch_xmlnode t path op =
   let apply xml op =
     match xml, op with
     | _, PReplace tree -> [xmlnode_of_xmltree tree]
-    | _, PInsertTree tree -> [xml] @ [xmlnode_of_xmltree tree]
+    | _, PInsertBefore tree -> [xmlnode_of_xmltree tree] @ [xml]
+    | _, PInsertAfter tree -> xml :: [xmlnode_of_xmltree tree]
     | _, PDeleteTree -> []
     | (x, _), PUpdateCData s -> [(x, `D s)]
     | (x, `D _), PUpdateNode (name, atts) -> [x, `E (name,atts,[])]
@@ -447,10 +462,16 @@ let patch_of_action (t1, patch) = function
     let op = PReplace xmltree2 in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-| InsertTree (n2, i) ->
+| InsertBefore (n2, i) ->
     let xmltree2 = n2.xml in
     let path = path_of_id t1 i in
-    let op = PInsertTree xmltree2 in
+    let op = PInsertBefore xmltree2 in
+    let t1 = patch_xmlnode t1 path op in
+    (t1, (path, op) :: patch)
+| InsertAfter (n2, i) ->
+    let xmltree2 = n2.xml in
+    let path = path_of_id t1 i in
+    let op = PInsertAfter xmltree2 in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
 | DeleteTree i ->
@@ -479,13 +500,24 @@ let rec xmltree_of_xmlnode = function
 ;;
 
 let mk_replace =
-  let rec iter acc = function
+  let rec iter acc t1 = function
   | [] -> List.rev acc
-  | InsertTree(n2,0) :: q -> iter (Replace(n2,1)::acc) q
-  | InsertTree(n2,i) :: DeleteTree j :: q when j.number = i ->
-      iter (Replace (n2, i) :: acc) q
+  | InsertBefore(n2,0) :: q
+  | InsertAfter(n2,0) :: q ->
+      iter (Replace(n2,1)::acc) t1 q (* remove now that we have PrependChild ? *)
+  | (InsertBefore(n2,i) as h) :: DeleteTree j :: q
+  | (InsertAfter(n2,i) as h) :: DeleteTree j :: q ->
+      if j.number = i then
+        begin
+          if n2 = t1.(i) then (* no need to replace a tree by the same one *)
+            iter acc t1 q
+          else
+            iter (Replace (n2, i) :: acc) t1 q
+        end
+      else
+        iter (h :: acc) t1 (DeleteTree j :: q)
   | h :: q ->
-      iter (h :: acc) q
+      iter (h :: acc) t1 q
   in
   iter []
 ;;
@@ -498,15 +530,15 @@ let file_of_string ~file s =
 (*/c==v=[File.file_of_string]=1.1====*)
 
 let patch_of_actions t1 t2 l =
+  let actions = mk_replace t1 l in
   let t1 = xmlnode_of_t t1 in
-  let actions = mk_replace l in
   let (t1, l) = List.fold_left patch_of_action (t1, []) actions in
-  (*
+
   let t1 = xmltree_of_xmlnode t1 in
   let t2 = xmltree_of_xmlnode (xmlnode_of_t t2) in
   file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1);
   file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2);
-  *)
+
   List.rev l
 ;;
 
@@ -523,8 +555,10 @@ let string_of_patch_operation (path, op) =
   match op with
   | PReplace xmltree ->
       "REPLACE("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
-  | PInsertTree xmltree ->
-      "INSERT_TREE("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
+  | PInsertBefore xmltree ->
+      "INSERT_BEFORE("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
+  | PInsertAfter xmltree ->
+      "INSERT_AFTER("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
   | PDeleteTree ->
       "DELETE_TREE("^(string_of_path path)^")"
   | PUpdateCData s ->
@@ -548,14 +582,14 @@ let default_costs = {
 let diff ?(fcost=default_costs) ?cut xml1 xml2 =
   let t1 = t_of_xml ?cut xml1 in
   let t2 = t_of_xml ?cut xml2 in
-  (*
+
   file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
-  *)
+
   let cost, actions = compute fcost t1 t2 in
-  (*
+
   prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
-  *)
+
   let patch = patch_of_actions t1 t2 actions in
   (cost, patch)
 ;;

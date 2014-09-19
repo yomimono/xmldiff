@@ -1,0 +1,5 @@
+cost=5,patch=
+INSERT_AFTER(root(0)/child(3), <child/>)
+REPLACE(root(0)/child(3), <child name="two"/>)
+DELETE_TREE(root(0)/child(2))
+UPDATE_NODE(root(0)/child(0), "child", _)

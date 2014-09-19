@@ -85,7 +85,8 @@ type patch_path =
 (** The patch operations. Each operation is to be performed at a
   given node (position) in the tree, referenced by a {!patch_path}. *)
 type patch_operation =
-    PInsertTree of xmltree (** Insert the given XML tree after the referenced node. *)
+  | PInsertBefore of xmltree (** Insert the given XML tree before the referenced node. *)
+  | PInsertAfter of xmltree (** Insert the given XML tree after the referenced node. *)
   | PDeleteTree (** Delete the referenced node. *)
   | PUpdateCData of string (** Change the referenced node to a CData with the given contents. *)
   | PUpdateNode of Xmlm.name * string Nmap.t

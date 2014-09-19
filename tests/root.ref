@@ -1,0 +1,2 @@
+cost=2,patch=
+REPLACE(root(0), <root><child/></root>)

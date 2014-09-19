@@ -1,0 +1,4 @@
+cost=3,patch=
+INSERT_AFTER(root(0)/child(1), <child name="three"/>)
+INSERT_AFTER(root(0)/child(1), <child/>)
+DELETE_TREE(root(0)/child(0))

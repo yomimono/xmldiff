@@ -1,0 +1,3 @@
+cost=6,patch=
+REPLACE(root(0)/child(2), <child name="two"><two/></child>)
+REPLACE(root(0)/child(0), <child name="three"><three/></child>)
