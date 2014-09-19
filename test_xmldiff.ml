@@ -38,7 +38,7 @@ let main () =
   | [ file1 ; file2 ] ->
       let cost, patch = diff file1 file2 in
       print_endline (Printf.sprintf "cost=%d,patch=" cost);
-      prerr_endline (Xmldiff.string_of_patch patch)
+      print_endline (Xmldiff.string_of_patch patch)
   | _ -> failwith usage
 ;;
 
