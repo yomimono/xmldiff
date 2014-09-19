@@ -1,0 +1,3 @@
+cost=2,patch=
+INSERT_AFTER(root(0)/child(0), <child/>)
+INSERT_AFTER(root(0)/child(0), <child name="two"/>)

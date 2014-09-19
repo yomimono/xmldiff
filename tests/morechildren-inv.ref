@@ -1,0 +1,3 @@
+cost=2,patch=
+DELETE_TREE(root(0)/child(2))
+DELETE_TREE(root(0)/child(1))
