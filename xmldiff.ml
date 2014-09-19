@@ -426,7 +426,7 @@ let patch_xmlnode t path op =
   let apply xml op =
     match xml, op with
     | _, PReplace tree -> [xmlnode_of_xmltree tree]
-    | _, PInsertBefore tree -> [xmlnode_of_xmltree tree] @ [xml]
+    | _, PInsertBefore tree -> [ xmlnode_of_xmltree tree ; xml ]
     | _, PInsertAfter tree -> xml :: [xmlnode_of_xmltree tree]
     | _, PDeleteTree -> []
     | (x, _), PUpdateCData s -> [(x, `D s)]
@@ -503,8 +503,8 @@ let mk_replace =
   let rec iter acc t1 = function
   | [] -> List.rev acc
   | InsertBefore(n2,0) :: q
-  | InsertAfter(n2,0) :: q ->
-      iter (Replace(n2,1)::acc) t1 q (* remove now that we have PrependChild ? *)
+  | InsertAfter(n2,0) :: q -> iter (Replace(n2,1)::acc) t1 q
+
   | (InsertBefore(n2,i) as h) :: DeleteTree j :: q
   | (InsertAfter(n2,i) as h) :: DeleteTree j :: q ->
       if j.number = i then
@@ -587,7 +587,7 @@ let diff ?(fcost=default_costs) ?cut xml1 xml2 =
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
 
   let cost, actions = compute fcost t1 t2 in
-  (*prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));*)
+  prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
   let patch = patch_of_actions t1 t2 actions in
   (cost, patch)
 ;;
