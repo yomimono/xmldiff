@@ -299,7 +299,8 @@ let compute fc t1 t2 =
           | true ->
               let ly = t2.(y).leftmost in
               (*prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);*)
-              (*fd.(lx - 1).(ly - 1) <- (0, []);*)
+              fd.(lx - 1).(ly - 1) <- (0, []);
+
               for i = lx to x do
                 (*Printf.printf "set delete t1.(%d) in fd.(%d).(%d)\n" i i (ly-1);*)
                 let op = DeleteTree t1.(i) in
