@@ -2,7 +2,8 @@ DIFF=../test-xmldiff
 
 TESTS=flat root foo_foo childof \
 	cdata children morechildren \
-	multichildren multideep multideepattr multimulti
+	multichildren multideep multideepattr multimulti \
+	one_two_three
 
 KO='\e[1;31m'"*KO\033[1m\033[0m"
 OK='\e[1;32m'"OK\033[1m\033[0m"
