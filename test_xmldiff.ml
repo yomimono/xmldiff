@@ -36,8 +36,7 @@ let main () =
   Arg.parse [] (fun f -> files := f :: !files) usage;
   match List.rev !files with
   | [ file1 ; file2 ] ->
-      let cost, patch = diff file1 file2 in
-      print_endline (Printf.sprintf "cost=%d,patch=" cost);
+      let patch = diff file1 file2 in
       print_endline (Xmldiff.string_of_patch patch)
   | _ -> failwith usage
 ;;

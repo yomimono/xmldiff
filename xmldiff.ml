@@ -39,6 +39,13 @@ type doc = {
   nodes : node array ;
  }
 
+(*c==v=[File.file_of_string]=1.1====*)
+let file_of_string ~file s =
+  let oc = open_out file in
+  output_string oc s;
+  close_out oc
+(*/c==v=[File.file_of_string]=1.1====*)
+
 let string_of_name = function
   ("",s) -> s
 | (ns,s) -> ns^":"^s
@@ -95,6 +102,11 @@ let string_of_xml ?(cut=false) tree =
   Xmlm.output_doc_tree frag output (None, tree);
   Buffer.contents b
 
+let short_label = function
+  `E (("",s2), _, _) -> s2
+| `E ((s1,s2), _, _) -> s1^":"^s2
+| `D _ -> "<pcdata>"
+
 let xmlnode_of_t t =
   let len = Array.length t in
   let rec build n =
@@ -114,7 +126,7 @@ let weight xml children =
   | `E _ -> List.fold_left (fun acc c -> c.weight +. acc) 1. children
 
 let t_of_xml =
-  let rec iter ?cut (n0, acc, h) xml =
+  let rec iter ?cut (n0, acc, acc_children, h) xml =
     let (label, subs, can_update) =
       match xml with
       | `D _ -> (label_of_xml xml, [], true)
@@ -123,7 +135,7 @@ let t_of_xml =
           | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
           | _ -> (label_of_xml xml, l, true)
     in
-    let (n, children, h_children) = List.fold_left (iter ?cut) (n0, [], 0) subs in
+    let (n, acc, children, h_children) = List.fold_left (iter ?cut) (n0, acc, [], 0) subs in
     let children = List.rev_map (fun node -> { node with parent = Some n }) children in
     let hash = hash xml in
     let weight = weight xml children in
@@ -136,19 +148,18 @@ let t_of_xml =
         matched = None ;
       }
     in
-    let acc = match children with [] -> acc | _ -> acc @ children in
-    (n+1, node :: acc, max h (h_children + 1))
+    (n+1, node :: acc, node :: acc_children, max h (h_children + 1))
   in
   fun ?cut xml ->
-    let (_, l, h) = iter ?cut (0, [], 0) xml in
+    let (_, l, _, h) = iter ?cut (0, [], [], 0) xml in
     let t = Array.of_list l in
     Array.sort (fun n1 n2 -> n1.number - n2.number) t;
     Array.iteri (fun i node ->
-       (*
-       prerr_endline (Printf.sprintf "i=%d, keyroot=%b, node.number=%d, parent=%s, xml=%s" i node.keyroot node.number
-         (match node.parent with None -> "" | Some n -> string_of_int n)
-         (short_label node.xml)
-       );*)
+       prerr_endline (Printf.sprintf "i=%d, node.number=%d, parent=%s, xml=%s"
+        i node.number
+          (match node.parent with None -> "" | Some n -> string_of_int n)
+          (short_label node.xml)
+       );
        assert (i = node.number)
     ) t;
     { height = h;
@@ -158,10 +169,6 @@ let t_of_xml =
 ;;
 
 
-
-
-type cost = int
-
 type operation =
   | Replace of node * int
   | InsertBefore of node * int (* insert tree from t2 as a left sibling of [int] in t1 *)
@@ -169,13 +176,7 @@ type operation =
   | DeleteTree of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
 
-type cost_funs = {
-    cost_insert : int -> xmltree -> cost ;
-    cost_delete : int -> xmltree -> cost ;
-    cost_edit : (label * xmltree) -> (label * xmltree) -> cost ;
-  }
-
-type actions = cost * operation list
+type actions = operation list
 
 type patch_path =
   Path_cdata of int
@@ -233,12 +234,6 @@ let xml_of_file file =
       raise e
 ;;
 
-
-let short_label = function
-  `E ((s1,s2), _, _) -> s1^":"^s2
-| `D _ -> "<pcdata>"
-;;
-
 let dot_of_t t =
   let b = Buffer.create 256 in
   let p b = Printf.bprintf b in
@@ -254,7 +249,33 @@ let dot_of_t t =
   Buffer.contents b
 ;;
 
-
+let dot_of_matches t1 t2 =
+  let b = Buffer.create 256 in
+  let p b = Printf.bprintf b in
+  p b "digraph g {\nrankdir=TB;\nordering=out;\n";
+  p b "subgraph cluster_2 {\n";
+  Array.iter
+    (fun node ->
+       p b "\"T%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml);
+       Array.iter (fun i -> p b "\"T%d\" -> \"T%d\";\n" node.number i) node.children ;
+    )
+    t2.nodes;
+  p b "}\n";
+  p b "subgraph cluster_1 {\n";
+  Array.iter
+    (fun node ->
+       p b "\"S%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml);
+       Array.iter (fun i -> p b "\"S%d\" -> \"S%d\";\n" node.number i) node.children ;
+       match node.matched with
+         None -> ()
+       | Some j -> p b "S%d -> T%d [style=\"dashed\"];\n" node.number j
+    )
+    t1.nodes;
+  p b "}\n";
+  p b "}\n";
+  Buffer.contents b
 
 let string_of_action = function
 | Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
@@ -340,12 +361,13 @@ let match_candidate hash_t1 t1 t2 j =
   | [i] -> Some i
   | l -> best_candidate t1 t2 j l
 
-let compute fc t1 t2 =
+let compute t1 t2 =
   let weight_queue = Queue.create () in
-  Queue.add 0 weight_queue ;
+  Queue.add (Array.length t2.nodes - 1) weight_queue ;
   let hash_t1 = build_hash_map t1 in
   while not (Queue.is_empty weight_queue) do
     let j = Queue.pop weight_queue in
+    prerr_endline (Printf.sprintf "trying to match %d" j);
     (* test whether j has already a match in t1 ? *)
     match match_candidate hash_t1 t1 t2 j with
       Some i ->
@@ -354,8 +376,12 @@ let compute fc t1 t2 =
     | None ->
         let t = Array.map (Array.get t2.nodes) t2.nodes.(j).children in
         Array.sort (fun n1 n2 -> Pervasives.compare n2.weight n1.weight) t;
-        Array.iteri (fun i _ -> Queue.add i weight_queue) t
+        Array.iteri (fun _ n ->
+           prerr_endline (Printf.sprintf "queuing %d" n.number);
+           Queue.add n.number weight_queue)
+          t
   done;
+  file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2);
   assert false
 
 type cur_path = N of Xmlm.name | CData
@@ -528,13 +554,6 @@ let mk_replace =
   iter []
 ;;
 
-(*c==v=[File.file_of_string]=1.1====*)
-let file_of_string ~file s =
-  let oc = open_out file in
-  output_string oc s;
-  close_out oc
-(*/c==v=[File.file_of_string]=1.1====*)
-
 let patch_of_actions t1 t2 l =
   let actions = mk_replace t1 l in
   let t1 = xmlnode_of_t t1 in
@@ -577,24 +596,17 @@ let string_of_patch l =
   String.concat "\n" (List.map string_of_patch_operation l)
 ;;
 
-let default_costs = {
-    cost_insert = (fun size _ -> size) ;
-    cost_delete = (fun size _ -> max (size / 4) 1) ;
-    cost_edit = (fun (label1, _) (label2, _) ->
-       if label1 = label2 then 0 else 1) ;
-  }
-;;
 
-let diff ?(fcost=default_costs) ?cut xml1 xml2 =
+let diff ?cut xml1 xml2 =
   let t1 = t_of_xml ?cut xml1 in
   let t2 = t_of_xml ?cut xml2 in
 
   file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
   file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
 
-  let cost, actions = compute fcost t1 t2 in
+  let actions = compute t1 t2 in
   prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
-  let patch = patch_of_actions t1 t2 actions in
-  (cost, patch)
+  (*patch_of_actions t1 t2 actions *)
+  []
 ;;
 

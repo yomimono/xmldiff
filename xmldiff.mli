@@ -57,23 +57,7 @@ type 'a xmlt = [
 (** Simple XML tree. *)
 type xmltree = xmltree xmlt
 
-type cost = int
 type label = Node of string | Text of string
-
-type cost_funs = {
-    cost_insert : int -> xmltree -> cost ;
-      (** [cost_insert size t] will return the cost the insert
-        the given tree [t] of size [s]. *)
-    cost_delete : int -> xmltree -> cost ;
-      (** [cost_delete size t] will return the cost the delete
-        the given tree [t] of size [s]. *)
-    cost_edit : (label * xmltree) -> (label * xmltree) -> cost ;
-      (** [cost_edit (label1, t1) (label2, t2)] will return the cost the change
-        the first node [t1] into the second node [t2].
-        [label1] and [label2] are two string representations allowing to
-        quickly compare the two nodes. The children of nodes are not
-        taken into account for this operation. *)
-  }
 
 (** A path to a node in an XML tree where to perform an operation. *)
 type patch_path =
@@ -96,17 +80,6 @@ type patch_operation =
 
 type patch = (patch_path * patch_operation) list
 
-(** Default cost functions, defined as:
-- cost_insert size _ = size
-- cost_delete size _ = max (size / 4) 1
-- cost_edit (label1, _) (label2,_) = if label1 = label2 then 0 else 1
-
-By defining cost functions, you can tune the precision of operations.
-For example, if insertions and deletions are cheap, the algorithm
-will return a single operation replacing the first tree by the second one.
-*)
-val default_costs : cost_funs
-
 (** [diff t1 t2] returns the pair [(c, p)], with [c] being the cost
   to change [t1] into [t2] and [p] the corresponding patch.
   @param fcost can be used to specify alternative cost functions.
@@ -118,9 +91,8 @@ val default_costs : cost_funs
   Default behaviour is to cut nothing.
 *)
 val diff :
-  ?fcost: cost_funs ->
   ?cut: (name -> string Nmap.t -> xmltree list -> bool) ->
-  xmltree -> xmltree -> int * patch
+  xmltree -> xmltree -> patch
 
 (** {2 Utilities} *)
 
