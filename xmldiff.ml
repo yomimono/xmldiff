@@ -1,6 +1,8 @@
 (** *)
 
 module Smap = Map.Make(String)
+module Intmap = Map.Make
+  (struct type t = int let compare (x:int) y = Pervasives.compare x y end)
 
 module Nmap =
  Map.Make (
@@ -20,11 +22,19 @@ type xmltree = xmltree xmlt
 type xmlnode = int option * xmlnode xmlt
 
 type label = Node of string | Text of string
+let compare_label l1 l2 =
+  match l1, l2 with
+    Node s1, Node s2 -> String.compare s1 s2
+  | Text s1, Text s2 -> String.compare s1 s2
+  | Node _, Text _  -> -1
+  | Text _, Node _ -> 1
+
+module Lmap = Map.Make(struct type t = label let compare = compare_label end)
 
 type node = {
   number : int ;
   children : int array ;
-  parent : int option ;
+  mutable parent : int option ;
   xml : xmltree ;
   weight : float ;
   hash : string ;
@@ -136,7 +146,8 @@ let t_of_xml =
           | _ -> (label_of_xml xml, l, true)
     in
     let (n, acc, children, h_children) = List.fold_left (iter ?cut) (n0, acc, [], 0) subs in
-    let children = List.rev_map (fun node -> { node with parent = Some n }) children in
+    let children = List.rev children in
+    List.iter (fun node -> node.parent <- Some n) children ;
     let hash = hash xml in
     let weight = weight xml children in
     let node =
@@ -361,6 +372,81 @@ let match_candidate hash_t1 t1 t2 j =
   | [i] -> Some i
   | l -> best_candidate t1 t2 j l
 
+let (+=) map (k, v) =
+  let x = try Intmap.find k map with Not_found -> 0. in
+  Intmap.add k (v +. x) map
+
+let match_uniquely_labeled =
+  let map_of_t nodes t f map =
+    Array.fold_left
+      (fun map i ->
+         let node = nodes.(i) in
+         match node.matched with
+           Some _ -> map
+         | None ->
+             let label = node.label in
+             let x = try Lmap.find label map with Not_found -> ([], []) in
+             let x = f i x in
+             Lmap.add label x map
+      )
+      map t
+  in
+  fun t1 t2 li lj ->
+    let map = map_of_t t1.nodes li (fun i (l1,l2) -> (i :: l1, l2)) Lmap.empty in
+    let map = map_of_t t2.nodes lj (fun j (l1,l2) -> (l1, j :: l2)) map in
+    Lmap.iter
+      (fun _ -> function
+         | [ i ], [ j ] -> match_nodes t1 t2 i j
+         | _ -> ())
+      map
+
+let match_uniquely_labeled_children =
+  let do_match t1 t2 j =
+    let nj = t2.nodes.(j) in
+    match nj.matched with
+      None -> ()
+    | Some i ->
+        let children_i = t1.nodes.(i).children in
+        let children_j = nj.children in
+        match_uniquely_labeled t1 t2 children_i children_j
+  in
+  fun t1 t2 ->
+    for j = Array.length t2.nodes -1 downto 0 do
+      do_match t1 t2 j
+    done
+
+let run_phase4 t1 t2 =
+  let f j node =
+    match node.matched with
+      Some _ -> ()
+    | None ->
+        let parents = Array.fold_left
+          (fun acc jc ->
+             match t2.nodes.(jc).matched with
+               None -> acc
+             | Some i ->
+                 prerr_endline (Printf.sprintf "%d has a child %d matched to %d" j jc i);
+                 match t1.nodes.(i).parent with
+                 | Some p when t1.nodes.(p).matched = None ->
+                     prerr_endline (Printf.sprintf "%d has a non-matched parent %d" i p);
+                     acc += (p, t1.nodes.(i).weight)
+                 | Some p ->
+                     prerr_endline (Printf.sprintf "%d has a parent %d already matched" i p);
+                     acc
+                 | None -> acc
+          )
+            Intmap.empty node.children
+        in
+        let (parent, _) = Intmap.fold
+          (fun p w ((acc_parent, acc_w) as acc) ->
+             if w > acc_w then (p, w) else acc)
+            parents (-1, -1.0)
+        in
+        if parent >= 0 then match_nodes t1 t2 j parent
+  in
+  Array.iteri f t2.nodes;
+  match_uniquely_labeled_children t1 t2
+
 let compute t1 t2 =
   let weight_queue = Queue.create () in
   Queue.add (Array.length t2.nodes - 1) weight_queue ;
@@ -381,6 +467,7 @@ let compute t1 t2 =
            Queue.add n.number weight_queue)
           t
   done;
+  run_phase4 t1 t2 ;
   file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2);
   assert false
 
