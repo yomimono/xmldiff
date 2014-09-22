@@ -1,5 +1,7 @@
 (** *)
 
+module Smap = Map.Make(String)
+
 module Nmap =
  Map.Make (
    struct
@@ -21,15 +23,77 @@ type label = Node of string | Text of string
 
 type node = {
   number : int ;
-  leftmost : int ;
-  keyroot : bool ;
-  child : int array ;
+  children : int array ;
   parent : int option ;
   xml : xmltree ;
-  size : int ;
+  weight : float ;
+  hash : string ;
   label : label ;
   can_update : bool ;
+  mutable matched : int option ;
   }
+
+type doc = {
+  height: int ;
+  w0 : float ;
+  nodes : node array ;
+ }
+
+let string_of_name = function
+  ("",s) -> s
+| (ns,s) -> ns^":"^s
+;;
+
+let string_of_atts map =
+  let l =
+    Nmap.fold
+      (fun name s acc ->
+         (Printf.sprintf "%s=%S" (string_of_name name) s) :: acc)
+      map []
+  in
+  String.concat " " l
+
+let label_of_xml = function
+| `D s -> Text s
+| `E (tag, atts, _) ->
+    Node
+      (Printf.sprintf "<%s %s>"
+       (string_of_name tag) (string_of_atts atts))
+
+let hash xml =
+  let s =
+    match xml with
+      `D s -> "!" ^ s
+    | `E _ -> "<" ^ (Marshal.to_string xml [])
+  in
+  Digest.string s
+
+let atts_of_map map =
+  List.rev
+    (Nmap.fold
+     (fun name s acc -> (name, s) :: acc)
+       map [])
+
+let string_of_xml ?(cut=false) tree =
+  let tree =
+    if cut then
+      match tree with
+        `D _ -> tree
+      | `E (name,atts,_) -> `E (name,atts,[])
+    else
+      tree
+  in
+  let b = Buffer.create 256 in
+  let ns_prefix s = Some s in
+  let output = Xmlm.make_output ~ns_prefix ~decl: false (`Buffer b) in
+  let frag = function
+  | `E (tag, atts, childs) ->
+      let atts = atts_of_map atts in
+      `El ((tag, atts), childs)
+  | `D d -> `Data d
+  in
+  Xmlm.output_doc_tree frag output (None, tree);
+  Buffer.contents b
 
 let xmlnode_of_t t =
   let len = Array.length t in
@@ -38,11 +102,63 @@ let xmlnode_of_t t =
     match xml with
       `D s -> (Some n, `D s)
     | `E (tag,atts,_) ->
-        let children = List.map build (Array.to_list t.(n).child) in
+        let children = List.map build (Array.to_list t.(n).children) in
         (Some n, `E (tag, atts, children))
   in
   build (len-1)
 ;;
+
+let weight xml children =
+  match xml with
+    `D s -> 1. +. log (float (1 + String.length s))
+  | `E _ -> List.fold_left (fun acc c -> c.weight +. acc) 1. children
+
+let t_of_xml =
+  let rec iter ?cut (n0, acc, h) xml =
+    let (label, subs, can_update) =
+      match xml with
+      | `D _ -> (label_of_xml xml, [], true)
+      | `E (tag, atts, l) ->
+          match cut with
+          | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
+          | _ -> (label_of_xml xml, l, true)
+    in
+    let (n, children, h_children) = List.fold_left (iter ?cut) (n0, [], 0) subs in
+    let children = List.rev_map (fun node -> { node with parent = Some n }) children in
+    let hash = hash xml in
+    let weight = weight xml children in
+    let node =
+      { number = n ;
+        children = Array.of_list (List.map (fun node -> node.number) children) ;
+        parent = None ;
+        xml ; label ; hash ; weight ;
+        can_update ;
+        matched = None ;
+      }
+    in
+    let acc = match children with [] -> acc | _ -> acc @ children in
+    (n+1, node :: acc, max h (h_children + 1))
+  in
+  fun ?cut xml ->
+    let (_, l, h) = iter ?cut (0, [], 0) xml in
+    let t = Array.of_list l in
+    Array.sort (fun n1 n2 -> n1.number - n2.number) t;
+    Array.iteri (fun i node ->
+       (*
+       prerr_endline (Printf.sprintf "i=%d, keyroot=%b, node.number=%d, parent=%s, xml=%s" i node.keyroot node.number
+         (match node.parent with None -> "" | Some n -> string_of_int n)
+         (short_label node.xml)
+       );*)
+       assert (i = node.number)
+    ) t;
+    { height = h;
+      nodes =  t;
+      w0 = t.(Array.length t - 1).weight ;
+    }
+;;
+
+
+
 
 type cost = int
 
@@ -75,24 +191,6 @@ type patch_operation =
 
 type patch = (patch_path * patch_operation) list
 
-let min_action (c1, l1) (c2, l2) =
-  if c1 <= c2 then (c1, l1) else (c2, l2)
-
-let cost_action fc = function
-| InsertBefore (node, _)
-| InsertAfter (node, _) -> fc.cost_insert node.size node.xml
-| DeleteTree node -> fc.cost_delete node.size node.xml
-| Edit (node1, node2) ->
-    fc.cost_edit (node1.label, node1.xml) (node2.label, node2.xml)
-| Replace _ -> 1
-;;
-
-let add_action (c,l) fc action =
-  let ca = cost_action fc action in
-  if ca = 0 then (c, l) else (c+ca, action :: l)
-;;
-
-let add_actions (c1,l1) (c2,l2) = (c1+c2, l1@l2)
 
 let rec xml_of_source s_source source =
  try
@@ -135,57 +233,6 @@ let xml_of_file file =
       raise e
 ;;
 
-let atts_of_map map =
-  List.rev
-    (Nmap.fold
-     (fun name s acc -> (name, s) :: acc)
-       map [])
-;;
-
-let string_of_xml ?(cut=false) tree =
-  let tree =
-    if cut then
-      match tree with
-        `D _ -> tree
-      | `E (name,atts,_) -> `E (name,atts,[])
-    else
-      tree
-  in
-  let b = Buffer.create 256 in
-  let ns_prefix s = Some s in
-  let output = Xmlm.make_output ~ns_prefix ~decl: false (`Buffer b) in
-  let frag = function
-  | `E (tag, atts, childs) ->
-      let atts = atts_of_map atts in
-      `El ((tag, atts), childs)
-  | `D d -> `Data d
-  in
-  Xmlm.output_doc_tree frag output (None, tree);
-  Buffer.contents b
-;;
-
-let string_of_name = function
-  ("",s) -> s
-| (ns,s) -> ns^":"^s
-;;
-
-let string_of_atts map =
-  let l =
-    Nmap.fold
-      (fun name s acc ->
-         (Printf.sprintf "%s=%S" (string_of_name name) s) :: acc)
-      map []
-  in
-  String.concat " " l
-;;
-
-let label_of_xml = function
-| `D s -> Text s
-| `E (tag, atts, _) ->
-    Node
-      (Printf.sprintf "<%s %s>"
-       (string_of_name tag) (string_of_atts atts))
-;;
 
 let short_label = function
   `E ((s1,s2), _, _) -> s1^":"^s2
@@ -198,71 +245,15 @@ let dot_of_t t =
   p b "digraph g {\nrankdir=TB;\nordering=out;\n";
   Array.iter
     (fun node ->
-       p b "\"N%d\" [ label=\"%d: %s [%d]\", fontcolor=%s ];\n"
-         node.number node.number (short_label node.xml) node.leftmost
-         (if node.keyroot then "red" else "black");
-       Array.iter (fun i -> p b "\"N%d\" -> \"N%d\";\n" node.number i) node.child ;
+       p b "\"N%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml);
+       Array.iter (fun i -> p b "\"N%d\" -> \"N%d\";\n" node.number i) node.children ;
     )
-    t;
+    t.nodes;
   p b "}\n";
   Buffer.contents b
 ;;
 
-let t_of_xml =
-  let rec iter ?cut (n0, acc, acc_children) xml =
-    let (label, subs, can_update) =
-      match xml with
-      | `D _ -> (label_of_xml xml, [], true)
-      | `E (tag, atts, l) ->
-          match cut with
-          | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
-          | _ -> (label_of_xml xml, l, true)
-    in
-    let (n, acc, children) = List.fold_left (iter ?cut) (n0, acc, []) subs in
-    let leftmost =
-      match children with
-        [] -> n
-      | node :: _ -> node.leftmost
-    in
-    let node =
-      { number = n ; leftmost ; keyroot = acc_children <> [] ;
-        child = Array.of_list (List.map (fun node -> node.number) children) ;
-        parent = None ;
-        xml ; label ;
-        size = n - n0 + 1 ;
-        can_update ;
-      }
-    in
-    let children = List.map (fun node -> { node with parent = Some n }) children in
-    let acc = match children with [] -> acc | _ -> acc @ children in
-    (n+1, acc, acc_children @ [node])
-  in
-  fun ?cut xml ->
-    let (_, l, root) = iter ?cut (1, [], []) xml in
-    let t = Array.of_list (l @ root) in
-    Array.sort (fun n1 n2 -> n1.number - n2.number) t;
-    let t = Array.append
-      [| {
-         number = -1 ; leftmost = -1 ; keyroot = false ;
-         child = [| |] ; parent = None ;
-         xml = `D ""; size = 0 ; label = Text "dummy" ;
-         can_update = true } |]
-        t
-    in
-    (* set root node as keyroot *)
-    let len = Array.length t in
-    t.(len-1) <- { t.(len-1) with keyroot = true };
-
-    Array.iteri (fun i node ->
-       (*
-       prerr_endline (Printf.sprintf "i=%d, keyroot=%b, node.number=%d, parent=%s, xml=%s" i node.keyroot node.number
-         (match node.parent with None -> "" | Some n -> string_of_int n)
-         (short_label node.xml)
-       );*)
-       if i > 0 then assert (i = node.number)
-    ) t;
-    t
-;;
 
 
 let string_of_action = function
@@ -278,80 +269,94 @@ let print pref i j (cost, actions) =
   Printf.printf "%s:%d,%d: cost=%d, actions=%s\n" pref i j cost
     (String.concat ", " (List.map string_of_action actions))
 
-let compute fc t1 t2 =
-  (* forest distance *)
-  let fd = Array.init (Array.length t1)
-    (fun i -> Array.make (Array.length t2) (0,[]))
-  in
-  (* tree distance *)
-  let d = Array.init (Array.length t1)
-    (fun i -> Array.make (Array.length t2) (0,[]))
-  in
+let build_hash_map =
+  let add map node =
+    let l =
+      try Smap.find node.hash map
+      with Not_found -> []
+    in
+    Smap.add node.hash (node.number :: l) map
 
-  for x = 1 to Array.length t1 - 1 do
-    match t1.(x).keyroot with
-      false -> ()
-    | true ->
-        let lx = t1.(x).leftmost in
-        for y = 1 to Array.length t2 - 1 do
-          match t2.(y).keyroot with
-            false -> ()
-          | true ->
-              let ly = t2.(y).leftmost in
-              (*prerr_endline  (Printf.sprintf "lx=%d, ly=%d" lx ly);*)
-              fd.(lx - 1).(ly - 1) <- (0, []);
-
-              for i = lx to x do
-                (*Printf.printf "set delete t1.(%d) in fd.(%d).(%d)\n" i i (ly-1);*)
-                let op = DeleteTree t1.(i) in
-                fd.(i).(ly - 1) <- add_action
-                  fd.(t1.(i).leftmost - 1).(ly - 1)
-                  fc op
-              done;
-              for j = ly to y do
-                let op = InsertAfter(t2.(y), lx - 1) in
-                fd.(lx - 1).(j) <- add_action
-                  fd.(lx - 1).(t2.(j).leftmost - 1)
-                  fc op
-              done;
-              for i = lx to x do
-                for j = ly to y do
-                  let li = t1.(i).leftmost in
-                  let lj = t2.(j).leftmost in
-                  let op_deletetree = DeleteTree(t1.(i)) in
-                  let cost_deletetree = add_action
-                    fd.(li-1).(j) fc op_deletetree
-                  in
-                  let op_inserttree =
-                    if j <> y then InsertAfter(t2.(j), i) else InsertBefore(t2.(j), i)
-                  in
-                  let cost_inserttree = add_action
-                    fd.(i).(lj-1) fc op_inserttree
-                  in
-                  let part = min_action cost_inserttree cost_deletetree in
-                  if li = lx && lj = ly then
-                    (
-                     let op_edit = Edit (t1.(i), t2.(j)) in
-                     let cost_edit = add_action
-                       fd.(i-1).(j-1) fc op_edit
-                     in
-                     d.(i).(j) <- min_action part cost_edit;
-                     fd.(i).(j) <- d.(i).(j)
-                    )
-                  else
-                    (
-                     fd.(i).(j) <- min_action
-                       part
-                       (add_actions d.(i).(j) fd.(li-1).(lj-1) )
-                    );
-                  (*print "FD" i j fd.(i).(j);*)
-                done
-              done;
-        done;
-  done;
-  fd.(Array.length t1 - 1).(Array.length t2 - 1)
+  in
+  fun t -> Array.fold_left add Smap.empty t.nodes
 ;;
 
+
+let rec get_nth_parent t i level =
+  match t.nodes.(i).parent with
+    None -> None
+  | Some p ->
+      if level <= 1 then
+        Some p
+      else
+        get_nth_parent t p (level-1)
+
+let d_of_node t i =
+  1. +. (float t.height) *. t.nodes.(i).weight /. t.w0
+
+let match_nodes t1 t2 i j =
+  t1.nodes.(i).matched <- Some j;
+  t2.nodes.(j).matched <- Some i
+
+let match_ancestors t1 t2 i j =
+  let max_level = int_of_float (d_of_node t2 j) in
+  let rec iter i j level =
+    if level > max_level then
+      ()
+    else
+      match t1.nodes.(i).parent, t2.nodes.(j).parent with
+        Some p1, Some p2
+          when t1.nodes.(p1).label = t2.nodes.(p2).label ->
+          match_nodes t1 t2 p1 p2;
+          iter p1 p2 (level + 1)
+      | _ -> ()
+  in
+  iter i j 1
+
+let rec best_candidate ?(level=1) t1 t2 j cands =
+  let d = d_of_node t2 j in
+  let parent_j = get_nth_parent t2 j level in
+  match parent_j with
+    None -> None
+  | Some parent_j ->
+      let test_parent i =
+        match get_nth_parent t1 i level with
+          Some p -> t1.nodes.(p).matched = Some parent_j
+        | _ -> false
+      in
+      try Some (List.find test_parent cands)
+      with Not_found ->
+          if float level < d then
+            best_candidate ~level: (level+1) t1 t2 j cands
+          else
+            None
+
+let candidates hash_t1 t2 j =
+  try Smap.find t2.nodes.(j).hash hash_t1 with Not_found -> []
+
+let match_candidate hash_t1 t1 t2 j =
+  match candidates hash_t1 t2 j with
+    [] -> None
+  | [i] -> Some i
+  | l -> best_candidate t1 t2 j l
+
+let compute fc t1 t2 =
+  let weight_queue = Queue.create () in
+  Queue.add 0 weight_queue ;
+  let hash_t1 = build_hash_map t1 in
+  while not (Queue.is_empty weight_queue) do
+    let j = Queue.pop weight_queue in
+    (* test whether j has already a match in t1 ? *)
+    match match_candidate hash_t1 t1 t2 j with
+      Some i ->
+        match_nodes t1 t2 i j;
+        match_ancestors t1 t2 i j
+    | None ->
+        let t = Array.map (Array.get t2.nodes) t2.nodes.(j).children in
+        Array.sort (fun n1 n2 -> Pervasives.compare n2.weight n1.weight) t;
+        Array.iteri (fun i _ -> Queue.add i weight_queue) t
+  done;
+  assert false
 
 type cur_path = N of Xmlm.name | CData
 module Cur_path = Map.Make (struct type t = cur_path let compare = Pervasives.compare end)
