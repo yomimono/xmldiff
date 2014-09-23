@@ -66,17 +66,19 @@ type patch_path =
     (** [Path_node (tag, n, more)] refers to the [n]th element with tag [tag].
       If [more <> None] then the path goes on into the children of the referenced node. *)
 
+type position = [`FirstChild | `After]
+
 (** The patch operations. Each operation is to be performed at a
   given node (position) in the tree, referenced by a {!patch_path}. *)
 type patch_operation =
-  | PInsertBefore of xmltree (** Insert the given XML tree as a left sibing of the referenced node. *)
-  | PInsertAfter of xmltree (** Insert the given XML tree as a right sibling of the referenced node. *)
-  | PDeleteTree (** Delete the referenced node. *)
+  | PInsert of xmltree * position (** Insert the given XML tree as a right sibling of the referenced node. *)
+  | PDelete (** Delete the referenced node. *)
   | PUpdateCData of string (** Change the referenced node to a CData with the given contents. *)
   | PUpdateNode of Xmlm.name * string Nmap.t
       (** Update the referenced node to be a tag with the given attributes and no child. *)
   | PReplace of xmltree
       (** Replace the referenced node by the given tree. *)
+  | PMove of patch_path * position
 
 type patch = (patch_path * patch_operation) list
 
