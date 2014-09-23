@@ -1,2 +1,1 @@
-cost=1,patch=
-DELETE_TREE(foo(0)/foo(0)/bar(0))
+DELETE(foo(0)/foo(0)/bar(0))

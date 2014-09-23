@@ -1,0 +1,3 @@
+INSERT(root(0)/three(0)/four(0), <value v="four"/>, FirstChild)
+INSERT(root(0)/two(0), <value v="two"/>, FirstChild)
+INSERT(root(0)/one(0), <value v="one"/>, FirstChild)

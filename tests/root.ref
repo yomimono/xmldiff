@@ -1,2 +1,1 @@
-cost=2,patch=
-REPLACE(root(0), <root><child/></root>)
+INSERT(root(0), <child/>, FirstChild)
