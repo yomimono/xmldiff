@@ -187,8 +187,8 @@ let t_of_xml =
 
 type operation =
   | Replace of node * int
-  | Move of int * node * int * int
-  | MoveRank of int * int
+  | Move of int * int * int (* node * parent * rank *)
+  | MoveRank of int * int * int (* node * parent * rank *)
   | Insert of node * int * int (* Insert(node,i,rank) insert tree from t2 as nth child of i *)
   | Delete of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
@@ -321,8 +321,8 @@ let dot_of_matches t1 t2 =
 
 let string_of_action = function
 | Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
-| Move (i, n2, new_parent, rank) -> Printf.sprintf "Move(%d,%d,%d)" i new_parent rank
-| MoveRank (i, rank) -> Printf.sprintf "MoveRank(%d,%d)" i rank
+| Move (i, new_parent, rank) -> Printf.sprintf "Move(%d,%d,%d)" i new_parent rank
+| MoveRank (i, parent, rank) -> Printf.sprintf "MoveRank(%d,%d,%d)" i parent rank
 | Insert (n2, i, rank) -> Printf.sprintf "Insert (%d, %d, %d): %s" n2.number i rank (string_of_xml ~cut:true n2.xml)
 | Delete n1 -> Printf.sprintf "Delete(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
 | Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
@@ -373,7 +373,12 @@ let make_actions t1 t2 =
             if n1.rank = n2.rank then
               acc
             else
-              MoveRank(n1.number, n2.rank) :: acc
+              (
+               let new_parent =
+                 match n2.parent with None -> assert false | Some i -> i
+               in
+               MoveRank(n1.number, new_parent, n2.rank) :: acc
+              )
           else
             (
              let new_parent =
@@ -383,7 +388,7 @@ let make_actions t1 t2 =
                    assert false
                | Some i -> i
              in
-             (Move(n1.number, n2, new_parent, rank)) :: acc
+             (Move(n1.number, new_parent, rank)) :: acc
             )
         in
         let acc =
@@ -432,14 +437,14 @@ let sort_actions =
     | Replace _, Replace _ -> 0
     | Replace _, _ -> 1
     | _, Replace _ -> -1
-    | MoveRank(_,rank1), MoveRank(_,rank2)
-    | MoveRank(_,rank1), Move(_,_,_,rank2)
-    | Move(_,_,_,rank1), MoveRank(_,rank2)
-    | MoveRank(_,rank1), Insert(_,_,rank2)
-    | Insert(_,_,rank1), MoveRank(_,rank2)
-    | Move (_,_,_,rank1), Move (_,_,_,rank2)
-    | Move (_,_,_,rank1), Insert (_,_,rank2)
-    | Insert (_,_,rank1), Move (_, _,_, rank2)
+    | MoveRank(_,_,rank1), MoveRank(_,_,rank2)
+    | MoveRank(_,_,rank1), Move(_,_,rank2)
+    | Move(_,_,rank1), MoveRank(_,_,rank2)
+    | MoveRank(_,_,rank1), Insert(_,_,rank2)
+    | Insert(_,_,rank1), MoveRank(_,_,rank2)
+    | Move (_,_,rank1), Move (_,_,rank2)
+    | Move (_,_,rank1), Insert (_,_,rank2)
+    | Insert (_,_,rank1), Move ( _,_, rank2)
     | Insert (_,_,rank1), Insert (_,_,rank2) -> rank1 - rank2
   in
   List.sort pred
@@ -845,15 +850,15 @@ let patch_of_action (t1, patch) = function
     let op = PReplace xmltree2 in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-| Move (i, _, new_parent, rank) ->
+| Move (i, new_parent, rank) ->
     let (path, _) = path_of_id t1 i in
     let (new_path, pos) = path_of_id t1 ~rank new_parent in
     let op = PMove (new_path, pos) in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-| MoveRank (i, rank) ->
+| MoveRank (i, parent, rank) ->
     let (path, _) = path_of_id t1 i in
-    let (new_path, pos) = path_of_id t1 ~rank i in
+    let (new_path, pos) = path_of_id t1 ~rank parent in
     let op = PMove (new_path, pos) in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)

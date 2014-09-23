@@ -1,3 +1,4 @@
-cost=3,patch=
-REPLACE(root(0)/child(2), <child name="two"/>)
-DELETE_TREE(root(0)/child(0)/three(0))
+DELETE(root(0)/child(2))
+DELETE(root(0)/child(0))
+INSERT(root(0), <child name="three"/>, FirstChild)
+INSERT(root(0)/child(1), <child name="two"/>, After)

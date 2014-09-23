@@ -1,3 +1,2 @@
-cost=2,patch=
-UPDATE_NODE(root(0)/child(2), "child", _)
-UPDATE_NODE(root(0)/child(0), "child", _)
+MOVE(root(0)/child(2), root(0), FirstChild)
+MOVE(root(0)/child(1), root(0)/child(1), After)
