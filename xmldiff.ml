@@ -72,10 +72,7 @@ let string_of_atts map =
 
 let label_of_xml = function
 | `D s -> Text s
-| `E (tag, atts, _) ->
-    Node
-      (Printf.sprintf "<%s %s>"
-       (string_of_name tag) (string_of_atts atts))
+| `E (tag, _, _) -> Node (string_of_name tag)
 
 let hash xml =
   let s =
@@ -326,9 +323,17 @@ let rec get_nth_parent t i level =
 let d_of_node t i =
   1. +. (float t.height) *. t.nodes.(i).weight /. t.w0
 
-let match_nodes t1 t2 i j =
+let rec match_nodes ?(with_subs=false) t1 t2 i j =
   t1.nodes.(i).matched <- Some j;
-  t2.nodes.(j).matched <- Some i
+  t2.nodes.(j).matched <- Some i;
+  if with_subs then
+    begin
+      let ch_i = t1.nodes.(i).children in
+      let ch_j = t2.nodes.(j).children in
+      for x = 0 to Array.length ch_i - 1 do
+        match_nodes ~with_subs: true t1 t2 ch_i.(x) ch_j.(x)
+      done
+    end
 
 let match_ancestors t1 t2 i j =
   let max_level = int_of_float (d_of_node t2 j) in
@@ -457,7 +462,7 @@ let compute t1 t2 =
     (* test whether j has already a match in t1 ? *)
     match match_candidate hash_t1 t1 t2 j with
       Some i ->
-        match_nodes t1 t2 i j;
+        match_nodes ~with_subs: true t1 t2 i j;
         match_ancestors t1 t2 i j
     | None ->
         let t = Array.map (Array.get t2.nodes) t2.nodes.(j).children in
