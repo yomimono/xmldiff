@@ -39,7 +39,7 @@ type node = {
   weight : float ;
   hash : string ;
   label : label ;
-  can_update : bool ;
+  is_cut : bool ;
   mutable matched : int option ;
   }
 
@@ -110,9 +110,13 @@ let string_of_xml ?(cut=false) tree =
   Buffer.contents b
 
 let short_label = function
-  `E (("",s2), _, _) -> s2
-| `E ((s1,s2), _, _) -> s1^":"^s2
-| `D _ -> "<pcdata>"
+  `E (("",s2), _, _) -> "<"^s2^">"
+| `E ((s1,s2), _, _) -> "<"^s1^":"^s2^">"
+| `D s ->
+    let len = String.length s in
+    let s = Printf.sprintf "%S" (String.sub s 0 (min 10 len)) in
+    let len = String.length s in
+    String.sub s 1 (len - 2)
 
 let xmlnode_of_t t =
   let len = Array.length t in
@@ -134,13 +138,13 @@ let weight xml children =
 
 let t_of_xml =
   let rec iter ?cut (n0, acc, acc_children, h) xml =
-    let (label, subs, can_update) =
+    let (label, subs, is_cut) =
       match xml with
-      | `D _ -> (label_of_xml xml, [], true)
+      | `D _ -> (label_of_xml xml, [], false)
       | `E (tag, atts, l) ->
           match cut with
-          | Some f when f tag atts l -> (Node (string_of_xml xml), [], false)
-          | _ -> (label_of_xml xml, l, true)
+          | Some f when f tag atts l -> (Node (string_of_xml xml), [], true)
+          | _ -> (label_of_xml xml, l, false)
     in
     let (n, acc, children, h_children) = List.fold_left (iter ?cut) (n0, acc, [], 0) subs in
     let children = List.rev children in
@@ -152,7 +156,7 @@ let t_of_xml =
         children = Array.of_list (List.map (fun node -> node.number) children) ;
         parent = None ;
         xml ; label ; hash ; weight ;
-        can_update ;
+        is_cut ;
         matched = None ;
       }
     in
@@ -163,11 +167,13 @@ let t_of_xml =
     let t = Array.of_list l in
     Array.sort (fun n1 n2 -> n1.number - n2.number) t;
     Array.iteri (fun i node ->
+       (*
        prerr_endline (Printf.sprintf "i=%d, node.number=%d, parent=%s, xml=%s"
         i node.number
           (match node.parent with None -> "" | Some n -> string_of_int n)
           (short_label node.xml)
        );
+       *)
        assert (i = node.number)
     ) t;
     { height = h;
@@ -247,7 +253,7 @@ let dot_of_t t =
   p b "digraph g {\nrankdir=TB;\nordering=out;\n";
   Array.iter
     (fun node ->
-       p b "\"N%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
+       p b "\"N%d\" [ label=\"%d: %s\", fontcolor=black ];\n"
          node.number node.number (short_label node.xml);
        Array.iter (fun i -> p b "\"N%d\" -> \"N%d\";\n" node.number i) node.children ;
     )
@@ -305,6 +311,23 @@ let matching_parent nodes n =
     None -> None
   | Some p -> nodes.(p).matched
 
+let add_edit_action acc n1 n2 =
+  match n1.xml, n2.xml with
+    `E _, `D _
+  | `D _, `E _ -> assert false
+  | `D s1, `D s2 -> Edit (n1, n2) :: acc
+  | `E (tag1, atts1, _), `E (tag2, atts2, _) ->
+      match n1.is_cut, n2.is_cut with
+        true, true -> Replace (n2, n1.number) :: acc
+      | false, false ->
+          begin
+            if tag1 = tag2 && Nmap.equal (=) atts1 atts2 then
+              acc
+            else
+              Edit (n1, n2) :: acc
+          end
+      | _ -> assert false
+
 let make_actions t1 t2 =
   let nodes1 = t1.nodes in
   let nodes2 = t2.nodes in
@@ -335,7 +358,7 @@ let make_actions t1 t2 =
             acc
           else
             (
-             let acc = Edit (n1, n2) :: acc in
+             let acc = add_edit_action acc n1 n2 in
              let (acc, _) = Array.fold_left f (acc, 0) n1.children in
              acc
             )
@@ -362,6 +385,24 @@ let make_actions t1 t2 =
   actions
 ;;
 
+let sort_actions =
+  let pred a1 a2 =
+    match a1, a2 with
+    | DeleteTree _, DeleteTree _ -> 0
+    | DeleteTree _, _ -> 1
+    | _, DeleteTree _ -> -1
+    | Edit _, Edit _ -> 0
+    | Edit _, _ -> -1
+    | _, Edit _ -> 1
+    | Replace _, Replace _ -> 0
+    | Replace _, _ -> -1
+    | _, Replace _ -> 1
+    | Move (_,_,_,rank1), Move (_,_,_,rank2)
+    | Move (_,_,_,rank1), Insert (_,_,rank2)
+    | Insert (_,_,rank1), Move (_, _,_, rank2)
+    | Insert (_,_,rank1), Insert (_,_,rank2) -> rank1 - rank2
+  in
+  List.sort pred
 
 let build_hash_map =
   let add map node =
@@ -436,7 +477,9 @@ let candidates hash_t1 t2 j =
   try Smap.find t2.nodes.(j).hash hash_t1 with Not_found -> []
 
 let match_candidate hash_t1 t1 t2 j =
-  match candidates hash_t1 t2 j with
+  let candidates = candidates hash_t1 t2 j in
+  let pred i = t1.nodes.(i).matched = None in
+  match List.filter pred candidates with
     [] -> None
   | [i] -> Some i
   | l -> best_candidate t1 t2 j l
@@ -538,7 +581,7 @@ let compute t1 t2 =
   done;
   run_phase4 t1 t2 ;
   file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2);
-  make_actions t1 t2
+  sort_actions (make_actions t1 t2)
 
 type cur_path = N of Xmlm.name | CData
 module Cur_path = Map.Make (struct type t = cur_path let compare = Pervasives.compare end)
@@ -668,13 +711,10 @@ let patch_of_action (t1, patch) = function
 | Edit (n1, n2) ->
     let path = path_of_id t1 n1.number in
     let op =
-      if n1.can_update then
-        match n1.xml, n2.xml with
-          _ , `D s2 -> PUpdateCData s2
-        | `E (_,_,_), `E (name,atts,_) -> PUpdateNode (name, atts)
-        | `D _, `E (name,atts,subs) -> PUpdateNode (name, atts)
-      else
-        PReplace n2.xml
+      match n1.xml, n2.xml with
+        _ , `D s2 -> PUpdateCData s2
+      | `E (_,_,_), `E (name,atts,_) -> PUpdateNode (name, atts)
+      | `D _, `E (name,atts,subs) -> PUpdateNode (name, atts)
     in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
