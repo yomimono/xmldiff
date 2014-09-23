@@ -39,6 +39,7 @@ type node = {
   weight : float ;
   hash : string ;
   label : label ;
+  rank : int ;
   is_cut : bool ;
   mutable matched : int option ;
   }
@@ -156,6 +157,7 @@ let t_of_xml =
         children = Array.of_list (List.map (fun node -> node.number) children) ;
         parent = None ;
         xml ; label ; hash ; weight ;
+        rank = List.length acc_children ;
         is_cut ;
         matched = None ;
       }
@@ -186,6 +188,7 @@ let t_of_xml =
 type operation =
   | Replace of node * int
   | Move of int * node * int * int
+  | MoveRank of int * int
   | Insert of node * int * int (* Insert(node,i,rank) insert tree from t2 as nth child of i *)
   | DeleteTree of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
@@ -253,8 +256,8 @@ let dot_of_t t =
   p b "digraph g {\nrankdir=TB;\nordering=out;\n";
   Array.iter
     (fun node ->
-       p b "\"N%d\" [ label=\"%d: %s\", fontcolor=black ];\n"
-         node.number node.number (short_label node.xml);
+       p b "\"N%d\" [ label=\"%d: %s[%d]\", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml) node.rank;
        Array.iter (fun i -> p b "\"N%d\" -> \"N%d\";\n" node.number i) node.children ;
     )
     t.nodes;
@@ -269,8 +272,8 @@ let dot_of_matches t1 t2 =
   p b "subgraph cluster_2 {\n";
   Array.iter
     (fun node ->
-       p b "\"T%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
-         node.number node.number (short_label node.xml);
+       p b "\"T%d\" [ label=\"%d: %s[%d\", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml) node.rank;
        Array.iter (fun i -> p b "\"T%d\" -> \"T%d\";\n" node.number i) node.children ;
     )
     t2.nodes;
@@ -278,8 +281,8 @@ let dot_of_matches t1 t2 =
   p b "subgraph cluster_1 {\n";
   Array.iter
     (fun node ->
-       p b "\"S%d\" [ label=\"%d: %s \", fontcolor=black ];\n"
-         node.number node.number (short_label node.xml);
+       p b "\"S%d\" [ label=\"%d: %s[%d]\", fontcolor=black ];\n"
+         node.number node.number (short_label node.xml) node.rank;
        Array.iter (fun i -> p b "\"S%d\" -> \"S%d\";\n" node.number i) node.children ;
        match node.matched with
          None -> ()
@@ -293,6 +296,7 @@ let dot_of_matches t1 t2 =
 let string_of_action = function
 | Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
 | Move (i, n2, new_parent, rank) -> Printf.sprintf "Move(%d,%d,%d)" i new_parent rank
+| MoveRank (i, rank) -> Printf.sprintf "MoveRank(%d,%d)" i rank
 | Insert (n2, i, rank) -> Printf.sprintf "Insert (%d, %d, %d): %s" n2.number i rank (string_of_xml ~cut:true n2.xml)
 | DeleteTree n1 -> Printf.sprintf "DeleteTree(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
 | Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
@@ -340,7 +344,10 @@ let make_actions t1 t2 =
         let matching_parents = have_matching_parents nodes1 n1 n2 in
         let acc =
           if matching_parents then
-            acc
+            if n1.rank = n2.rank then
+              acc
+            else
+              MoveRank(n1.number, n2.rank) :: acc
           else
             (
              let new_parent =
@@ -397,6 +404,11 @@ let sort_actions =
     | Replace _, Replace _ -> 0
     | Replace _, _ -> -1
     | _, Replace _ -> 1
+    | MoveRank(_,rank1), MoveRank(_,rank2)
+    | MoveRank(_,rank1), Move(_,_,_,rank2)
+    | Move(_,_,_,rank1), MoveRank(_,rank2)
+    | MoveRank(_,rank1), Insert(_,_,rank2)
+    | Insert(_,_,rank1), MoveRank(_,rank2)
     | Move (_,_,_,rank1), Move (_,_,_,rank2)
     | Move (_,_,_,rank1), Insert (_,_,rank2)
     | Insert (_,_,rank1), Move (_, _,_, rank2)
@@ -405,7 +417,7 @@ let sort_actions =
   List.sort pred
 
 let build_hash_map =
-  let add map node =
+  let add node map =
     let l =
       try Smap.find node.hash map
       with Not_found -> []
@@ -413,7 +425,7 @@ let build_hash_map =
     Smap.add node.hash (node.number :: l) map
 
   in
-  fun t -> Array.fold_left add Smap.empty t.nodes
+  fun t -> Array.fold_right add t.nodes Smap.empty
 ;;
 
 let rec get_nth_parent t i level =
@@ -429,6 +441,7 @@ let d_of_node t i =
   1. +. (float t.height) *. t.nodes.(i).weight /. t.w0
 
 let rec match_nodes ?(with_subs=false) t1 t2 i j =
+  (*prerr_endline (Printf.sprintf "matching %d -> %d" i j);*)
   t1.nodes.(i).matched <- Some j;
   t2.nodes.(j).matched <- Some i;
   if with_subs then
@@ -455,7 +468,15 @@ let match_ancestors t1 t2 i j =
   in
   iter i j 1
 
+let rec min_list p v l =
+  let rec iter acc = function
+    [] -> acc
+  | h :: q -> if p h < acc then iter h q else iter acc q
+  in
+  iter v l
+
 let rec best_candidate ?(level=1) t1 t2 j cands =
+  prerr_endline ("best_candidates "^(String.concat ", " (List.map string_of_int cands)));
   let d = d_of_node t2 j in
   let parent_j = get_nth_parent t2 j level in
   match parent_j with
@@ -559,6 +580,11 @@ let run_phase4 t1 t2 =
   Array.iteri f t2.nodes;
   match_uniquely_labeled_children t1 t2
 
+let order_by_weight n1 n2 =
+  match Pervasives.compare n2.weight n1.weight with
+    0 -> Pervasives.compare n1.rank n2.rank
+  | n -> n
+
 let compute t1 t2 =
   let weight_queue = Queue.create () in
   Queue.add (Array.length t2.nodes - 1) weight_queue ;
@@ -573,7 +599,7 @@ let compute t1 t2 =
         match_ancestors t1 t2 i j
     | None ->
         let t = Array.map (Array.get t2.nodes) t2.nodes.(j).children in
-        Array.sort (fun n1 n2 -> Pervasives.compare n2.weight n1.weight) t;
+        Array.sort order_by_weight t;
         Array.iteri (fun _ n ->
            prerr_endline (Printf.sprintf "queuing %d" n.number);
            Queue.add n.number weight_queue)
@@ -694,6 +720,8 @@ let patch_of_action (t1, patch) = function
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
 | Move (i, n2, new_parent, rank) ->
+    assert false
+| MoveRank (i, rank) ->
     assert false
 | Insert (n2, i, rank) ->
     assert false
