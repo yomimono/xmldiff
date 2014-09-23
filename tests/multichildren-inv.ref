@@ -1,3 +1,3 @@
-cost=2,patch=
-UPDATE_NODE(root(0)/child(2), "child", _)
-DELETE_TREE(root(0)/child(0))
+DELETE(root(0)/child(2))
+MOVE(root(0)/child(1), root(0), FirstChild)
+MOVE(root(0)/child(1), root(0)/child(0), After)

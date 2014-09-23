@@ -375,7 +375,7 @@ let make_actions t1 t2 =
             else
               (
                let new_parent =
-                 match n2.parent with None -> assert false | Some i -> i
+                 match n1.parent with None -> assert false | Some i -> i
                in
                MoveRank(n1.number, new_parent, n2.rank) :: acc
               )

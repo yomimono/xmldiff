@@ -1,0 +1,1 @@
+tests/multichildren: useless MOVE(root(0)/child(1), root(0)/child(0), After)
