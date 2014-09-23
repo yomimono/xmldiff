@@ -725,32 +725,13 @@ let rec xmltree_of_xmlnode = function
 | (_, `E (tag,atts,subs)) -> `E (tag, atts, List.map xmltree_of_xmlnode subs)
 ;;
 
-let mk_replace =
-  let rec iter acc t1 = function
-  | [] -> List.rev acc
-  | (Insert(n2,i,rank) as h) :: DeleteTree j :: q ->
-      if j.number = i then
-        begin
-          if n2 = t1.(i) then (* no need to replace a tree by the same one *)
-            iter acc t1 q
-          else
-            iter (Replace (n2, i) :: acc) t1 q
-        end
-      else
-        iter (h :: acc) t1 (DeleteTree j :: q)
-  | h :: q ->
-      iter (h :: acc) t1 q
-  in
-  iter []
-;;
 
-let patch_of_actions t1 t2 l =
-  let actions = mk_replace t1 l in
-  let t1 = xmlnode_of_t t1 in
-  let (t1, l) = List.fold_left patch_of_action (t1, []) actions in
+let patch_of_actions t1 t2 actions =
+  let nodes1 = xmlnode_of_t t1.nodes in
+  let (nodes1, l) = List.fold_left patch_of_action (nodes1, []) actions in
 
-  let t1 = xmltree_of_xmlnode t1 in
-  let t2 = xmltree_of_xmlnode (xmlnode_of_t t2) in
+  let t1 = xmltree_of_xmlnode nodes1 in
+  let t2 = xmltree_of_xmlnode (xmlnode_of_t t2.nodes) in
   file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1);
   file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2);
 
@@ -796,7 +777,6 @@ let diff ?cut xml1 xml2 =
 
   let actions = compute t1 t2 in
   prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
-  (*patch_of_actions t1 t2 actions *)
-  []
+  patch_of_actions t1 t2 actions
 ;;
 
