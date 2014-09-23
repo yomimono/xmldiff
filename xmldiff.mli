@@ -25,17 +25,10 @@
 
 (** Computing diffs on XML trees.
 
-  Algorithm adapted from
-  "Tree to tree correction for document trees"
-  by Barnart, Clarke and Duncan. Technical report available
-  {{:http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.62.6907}here}.
+  Algorithm adapted from Gregory Cobena's Phd. thesis:
+  "Gestion des changements pour les données semi-structurées du Web
+  (Change management of semi-structured data on the Web)"
 
-  We implement the first extension of Zhang and Shasha and remove the
-  InsertNode and DeleteNode operations: they can be replaced by InsertBefore,
-  InsertAfter and DeleteTree (even if not exactly the same) and the semantic of InsertNode
-  is not clear in the article (where do we insert ?).
-  Besides, it is easier to write the cost function if there is only
-  one operation to insert (before or after) and one to delete.
 *)
 
 type name = Xmlm.name
@@ -66,19 +59,22 @@ type patch_path =
     (** [Path_node (tag, n, more)] refers to the [n]th element with tag [tag].
       If [more <> None] then the path goes on into the children of the referenced node. *)
 
+(** When inserting or moving a node, this indicates whether to
+  insert the tree as first node of the node corresponding to the given
+  path, or as a right sibling. *)
 type position = [`FirstChild | `After]
 
 (** The patch operations. Each operation is to be performed at a
   given node (position) in the tree, referenced by a {!patch_path}. *)
 type patch_operation =
-  | PInsert of xmltree * position (** Insert the given XML tree as a right sibling of the referenced node. *)
+  | PInsert of xmltree * position (** Insert the given XML tree *)
   | PDelete (** Delete the referenced node. *)
   | PUpdateCData of string (** Change the referenced node to a CData with the given contents. *)
   | PUpdateNode of Xmlm.name * string Nmap.t
       (** Update the referenced node to be a tag with the given attributes and no child. *)
   | PReplace of xmltree
       (** Replace the referenced node by the given tree. *)
-  | PMove of patch_path * position
+  | PMove of patch_path * position (** Move the node to the given path and position *)
 
 type patch = (patch_path * patch_operation) list
 

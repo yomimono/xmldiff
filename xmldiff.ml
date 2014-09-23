@@ -1,5 +1,13 @@
 (** *)
 
+let dbg_mode =
+  match try Sys.getenv "XMLDIFF_DEBUG" with _ -> "" with
+    "1" -> true
+  | _ -> false
+
+let dbg = if dbg_mode then prerr_endline else fun _ -> ()
+let on_dbg f x = if dbg_mode then f x else ()
+
 module Smap = Map.Make(String)
 module Intmap = Map.Make
   (struct type t = int let compare (x:int) y = Pervasives.compare x y end)
@@ -384,7 +392,7 @@ let make_actions t1 t2 =
              let new_parent =
                match matching_parent nodes2 n2 with
                  None ->
-                   prerr_endline (Printf.sprintf "make_actions, i = %d" i);
+                   dbg (Printf.sprintf "make_actions, i = %d" i);
                    assert false
                | Some i -> i
              in
@@ -412,7 +420,7 @@ let make_actions t1 t2 =
         let new_parent =
           match matching_parent nodes2 n2 with
             None ->
-              prerr_endline (Printf.sprintf "no matching parent for t2.(%d)" n2.number);
+              dbg (Printf.sprintf "no matching parent for t2.(%d)" n2.number);
               assert false
           | Some i -> i
         in
@@ -509,7 +517,7 @@ let rec min_list p v l =
   iter v l
 
 let rec best_candidate ?(level=1) t1 t2 j cands =
-  prerr_endline ("best_candidates "^(String.concat ", " (List.map string_of_int cands)));
+  dbg ("best_candidates "^(String.concat ", " (List.map string_of_int cands)));
   let d = d_of_node t2 j in
   let parent_j = get_nth_parent t2 j level in
   match parent_j with
@@ -591,13 +599,13 @@ let run_phase4 t1 t2 =
              match t2.nodes.(jc).matched with
                None -> acc
              | Some i ->
-                 prerr_endline (Printf.sprintf "%d has a child %d matched to %d" j jc i);
+                 dbg (Printf.sprintf "%d has a child %d matched to %d" j jc i);
                  match t1.nodes.(i).parent with
                  | Some p when t1.nodes.(p).matched = None ->
-                     prerr_endline (Printf.sprintf "%d has a non-matched parent %d" i p);
+                     dbg (Printf.sprintf "%d has a non-matched parent %d" i p);
                      acc += (p, t1.nodes.(i).weight)
                  | Some p ->
-                     prerr_endline (Printf.sprintf "%d has a parent %d already matched" i p);
+                     dbg (Printf.sprintf "%d has a parent %d already matched" i p);
                      acc
                  | None -> acc
           )
@@ -648,7 +656,7 @@ let compute t1 t2 =
   done;
 
   run_phase4 t1 t2 ;
-  file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2);
+  on_dbg (fun () -> file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2)) ();
   sort_actions (make_actions t1 t2)
 
 type cur_path = N of Xmlm.name | CData
@@ -868,7 +876,10 @@ let patch_of_action (t1, patch) = function
     let op = PInsert (xmltree2, pos) in
     let t1 = patch_xmlnode t1 path op in
     incr cpt;
-    file_of_string ~file: (Printf.sprintf "/tmp/insert%02d.dot" !cpt) (dot_of_xmlnode t1);
+    on_dbg (fun () ->
+       file_of_string ~file: (Printf.sprintf "/tmp/insert%02d.dot" !cpt)
+         (dot_of_xmlnode t1))
+      ();
     (t1, (path, op) :: patch)
 | Delete i ->
     let (path,_) = path_of_id t1 i.number in
@@ -895,14 +906,16 @@ let rec xmltree_of_xmlnode = function
 
 let patch_of_actions t1 t2 actions =
   let nodes1 = xmlnode_of_t t1.nodes in
-  file_of_string ~file: "/tmp/before_patch.dot" (dot_of_xmlnode nodes1);
+  on_dbg (fun () -> file_of_string ~file: "/tmp/before_patch.dot" (dot_of_xmlnode nodes1)) ();
   let (nodes1, l) = List.fold_left patch_of_action (nodes1, []) actions in
-  file_of_string ~file: "/tmp/result.dot" (dot_of_xmlnode nodes1);
+  on_dbg (fun () -> file_of_string ~file: "/tmp/result.dot" (dot_of_xmlnode nodes1)) ();
 
   let t1 = xmltree_of_xmlnode nodes1 in
   let t2 = xmltree_of_xmlnode (xmlnode_of_t t2.nodes) in
-  file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1);
-  file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2);
+  on_dbg (fun () ->
+     file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1) ;
+     file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2) ;
+  ) ();
 
   List.rev l
 ;;
@@ -944,11 +957,13 @@ let diff ?cut xml1 xml2 =
   let t1 = t_of_xml ?cut xml1 in
   let t2 = t_of_xml ?cut xml2 in
 
-  file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
-  file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
+  on_dbg (fun () ->
+     file_of_string ~file: "/tmp/t1.dot" (dot_of_t t1);
+     file_of_string ~file: "/tmp/t2.dot" (dot_of_t t2);
+  ) ();
 
   let actions = compute t1 t2 in
-  prerr_endline ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
+  dbg ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
   patch_of_actions t1 t2 actions
 ;;
 
