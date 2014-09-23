@@ -1,3 +1,4 @@
-cost=6,patch=
-REPLACE(root(0)/child(2), <child name="two"><two/></child>)
-REPLACE(root(0)/child(0), <child name="three"><three/></child>)
+DELETE(root(0)/child(2))
+DELETE(root(0)/child(0))
+INSERT(root(0), <child name="three"><three/></child>, FirstChild)
+INSERT(root(0)/child(1), <child name="two"><two/></child>, After)
