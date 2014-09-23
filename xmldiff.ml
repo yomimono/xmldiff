@@ -179,8 +179,8 @@ let t_of_xml =
 
 type operation =
   | Replace of node * int
-  | InsertBefore of node * int (* insert tree from t2 as a left sibling of [int] in t1 *)
-  | InsertAfter of node * int (* insert tree from t2 as a right sibling of [int] in t1 *)
+  | Move of int * node * int * int
+  | Insert of node * int * int (* Insert(node,i,rank) insert tree from t2 as nth child of i *)
   | DeleteTree of node (* delete tree from t1 *)
   | Edit of node * node (* change label of node from t1 to label of node from t2 *)
 
@@ -199,7 +199,6 @@ type patch_operation =
 | PReplace of xmltree
 
 type patch = (patch_path * patch_operation) list
-
 
 let rec xml_of_source s_source source =
  try
@@ -287,16 +286,82 @@ let dot_of_matches t1 t2 =
 
 let string_of_action = function
 | Replace (n2, i) -> Printf.sprintf "Replace (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
-| InsertBefore (n2, i) -> Printf.sprintf "InsertBefore (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
-| InsertAfter (n2, i) -> Printf.sprintf "InsertAfter (%d, %d): %s" n2.number i (string_of_xml ~cut:true n2.xml)
+| Move (i, n2, new_parent, rank) -> Printf.sprintf "Move(%d,%d,%d)" i new_parent rank
+| Insert (n2, i, rank) -> Printf.sprintf "Insert (%d, %d, %d): %s" n2.number i rank (string_of_xml ~cut:true n2.xml)
 | DeleteTree n1 -> Printf.sprintf "DeleteTree(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
 | Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
   (string_of_xml ~cut: true n1.xml) (string_of_xml ~cut: true n2.xml)
 ;;
 
-let print pref i j (cost, actions) =
-  Printf.printf "%s:%d,%d: cost=%d, actions=%s\n" pref i j cost
-    (String.concat ", " (List.map string_of_action actions))
+let have_matching_parents nodes1 n1 n2 =
+  match n1.parent, n2.parent with
+  | None, None -> true
+  | None, _
+  | _, None -> false
+  | Some p1, Some p2 -> nodes1.(p1).matched = Some p2
+
+let matching_parent nodes n =
+  match n.parent with
+    None -> None
+  | Some p -> nodes.(p).matched
+
+let make_actions t1 t2 =
+  let nodes1 = t1.nodes in
+  let nodes2 = t2.nodes in
+  let rec f (acc, rank) i =
+    let n1 = nodes1.(i) in
+    match n1.matched with
+      None -> ((DeleteTree n1) :: acc, rank + 1)
+    | Some j ->
+        let n2 = nodes2.(j) in
+        let matching_parents = have_matching_parents nodes1 n1 n2 in
+        let acc =
+          if matching_parents then
+            acc
+          else
+            (
+             let new_parent =
+               match matching_parent nodes2 n2 with
+                 None ->
+                   prerr_endline (Printf.sprintf "make_actions, i = %d" i);
+                   assert false
+               | Some i -> i
+             in
+             (Move(n1.number, n2, new_parent, rank)) :: acc
+            )
+        in
+        let acc =
+          if n1.hash = n2.hash then
+            acc
+          else
+            (
+             let acc = Edit (n1, n2) :: acc in
+             let (acc, _) = Array.fold_left f (acc, 0) n1.children in
+             acc
+            )
+        in
+        (acc, rank + 1)
+  in
+  let (actions, _) = f ([], 0) (Array.length nodes1 - 1) in
+  (* note: we should not have a node not matched in t2 with matched descendants *)
+  let rec g (acc, rank) j =
+    let n2 = nodes2.(j) in
+    match n2.matched with
+      None ->
+        let new_parent =
+          match matching_parent nodes2 n2 with
+            None -> assert false
+          | Some i -> i
+        in
+        ((Insert (n2, new_parent, rank)) :: acc, rank + 1)
+    | Some _ ->
+        let (acc, _) = Array.fold_left g (acc, 0) n2.children in
+        (acc, rank + 1)
+  in
+  let (actions, _) = g (actions, 0) (Array.length nodes2 - 1) in
+  actions
+;;
+
 
 let build_hash_map =
   let add map node =
@@ -309,7 +374,6 @@ let build_hash_map =
   in
   fun t -> Array.fold_left add Smap.empty t.nodes
 ;;
-
 
 let rec get_nth_parent t i level =
   match t.nodes.(i).parent with
@@ -474,7 +538,7 @@ let compute t1 t2 =
   done;
   run_phase4 t1 t2 ;
   file_of_string ~file:"/tmp/matches.dot" (dot_of_matches t1 t2);
-  assert false
+  make_actions t1 t2
 
 type cur_path = N of Xmlm.name | CData
 module Cur_path = Map.Make (struct type t = cur_path let compare = Pervasives.compare end)
@@ -586,18 +650,16 @@ let patch_of_action (t1, patch) = function
     let op = PReplace xmltree2 in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-| InsertBefore (n2, i) ->
-    let xmltree2 = n2.xml in
+| Move (i, n2, new_parent, rank) ->
+    assert false
+| Insert (n2, i, rank) ->
+    assert false
+(*    let xmltree2 = n2.xml in
     let path = path_of_id t1 i in
     let op = PInsertBefore xmltree2 in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-| InsertAfter (n2, i) ->
-    let xmltree2 = n2.xml in
-    let path = path_of_id t1 i in
-    let op = PInsertAfter xmltree2 in
-    let t1 = patch_xmlnode t1 path op in
-    (t1, (path, op) :: patch)
+*)
 | DeleteTree i ->
     let path = path_of_id t1 i.number in
     let op = PDeleteTree in
@@ -626,11 +688,7 @@ let rec xmltree_of_xmlnode = function
 let mk_replace =
   let rec iter acc t1 = function
   | [] -> List.rev acc
-  | InsertBefore(n2,0) :: q
-  | InsertAfter(n2,0) :: q -> iter (Replace(n2,1)::acc) t1 q
-
-  | (InsertBefore(n2,i) as h) :: DeleteTree j :: q
-  | (InsertAfter(n2,i) as h) :: DeleteTree j :: q ->
+  | (Insert(n2,i,rank) as h) :: DeleteTree j :: q ->
       if j.number = i then
         begin
           if n2 = t1.(i) then (* no need to replace a tree by the same one *)
