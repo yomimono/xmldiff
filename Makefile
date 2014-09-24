@@ -84,6 +84,17 @@ install: xmldiff.cmo xmldiff.cmx xmldiff.cmxs
 uninstall:
 	ocamlfind remove xmldiff
 
+# myself
+
+master.Makefile: master.Makefile.in config.status META.in
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+configure: configure.ac
+	autoconf
+
 # archive :
 ###########
 archive:
