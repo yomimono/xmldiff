@@ -128,13 +128,23 @@ let short_label = function
     String.sub s 1 (len - 2)
 
 let xmlnode_of_t t =
+  let rec unfold_cut = function
+    (`D s) as xml -> (None, xml)
+  | `E (tag, atts, subs) ->
+      (None, `E (tag, atts, List.map unfold_cut subs))
+  in
   let len = Array.length t in
   let rec build n =
     let xml = t.(n).xml in
     match xml with
       `D s -> (Some n, `D s)
-    | `E (tag,atts,_) ->
-        let children = List.map build (Array.to_list t.(n).children) in
+    | `E (tag,atts,children) ->
+        let children = 
+          if t.(n).is_cut then
+            List.map unfold_cut children
+          else
+            List.map build (Array.to_list t.(n).children)
+        in
         (Some n, `E (tag, atts, children))
   in
   build (len-1)
