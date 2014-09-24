@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<title>Xmldiff : Xmldiff : Xmldiff_js</title>
+<link href="http://zoggy.github.io/xmldiff/style.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="page">
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+
+
+  <div class="nav-collapse">
+    <ul class="nav">
+    <li class="&lt;navbar-home/&gt;"><a href="http://zoggy.github.io/xmldiff/index.html">Xml-diff</a></li>
+    <li class="active"><a href="http://zoggy.github.io/xmldiff/refdoc/">Documentation</a></li>
+
+  </ul>
+  <div class="nav pull-right">  </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div id="header">
+  
+  
+  
+</div>
+
+
+
+<div class="ocamldoc-page">
+<code class="code"><span class="keyword">sig</span><br/>
+  <span class="keyword">val</span> log : string <span class="keywordsign">-&gt;</span> unit<br/>
+  <span class="keyword">val</span> dom_of_xml : <span class="constructor">Xmldiff</span>.xmltree <span class="keywordsign">-&gt;</span> <span class="constructor">Dom</span>.node <span class="constructor">Js</span>.t<br/>
+  <span class="keyword">val</span> dom_node_by_path :<br/>
+    ?skip_node:(<span class="constructor">Dom</span>.node <span class="constructor">Js</span>.t <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span> <span class="constructor">Xmldiff</span>.patch_path <span class="keywordsign">-&gt;</span> <span class="constructor">Dom</span>.node <span class="constructor">Js</span>.t<br/>
+  <span class="keyword">val</span> apply_dom_patch :<br/>
+    ?skip_node:(<span class="constructor">Dom</span>.node <span class="constructor">Js</span>.t <span class="keywordsign">-&gt;</span> bool) <span class="keywordsign">-&gt;</span><br/>
+    (<span class="constructor">Xmldiff</span>.patch_path * <span class="constructor">Xmldiff</span>.patch_operation) list <span class="keywordsign">-&gt;</span> unit<br/>
+<span class="keyword">end</span></code></div>
+
+
+
+
+
+
+
+
+</div> 
+</body>
+</html>

@@ -35,25 +35,17 @@
 
 <div class="ocamldoc-page">
 <div class="navbar"> <a class="up" href="index.html" title="Index">Up</a>
- </div>
+ <a class="post" href="Xmldiff_js.html" title="Xmldiff_js">Next</a>
+</div>
 <h1>Module <a href="type_Xmldiff.html">Xmldiff</a></h1>
 
 <pre><span class="keyword">module</span> Xmldiff: <code class="code">sig</code> <a href="Xmldiff.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Computing diffs on XML trees.
 <div class="vertical-space"> </div>
 
-  Algorithm adapted from
-  &quot;Tree to tree correction for document trees&quot;
-  by Barnart, Clarke and Duncan. Technical report available
-  <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.62.6907">here</a>.
-<div class="vertical-space"> </div>
-
-  We implement the first extension of Zhang and Shasha and remove the
-  InsertNode and DeleteNode operations: they can be replaced by InsertTree and
-  DeleteTree (even if not exactly the same) and the semantic of InsertNode
-  is not clear (where do we insert ?).
-  Besides, it is easier to write the cost function if there is only
-  one operation to insert and one to delete.<br/>
+  Algorithm adapted from Gregory Cobena's Phd. thesis:
+  &quot;Gestion des changements pour les données semi-structurées du Web
+  (Change management of semi-structured data on the Web)&quot;<br/>
 </div>
 <hr width="100%"/>
 
@@ -75,13 +67,10 @@ XML tree. The type is parametrized because it is shared
 </div>
 
 
-<pre><span id="TYPExmltree"><span class="keyword">type</span> xmltree</span> = <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a> <a href="Xmldiff.html#TYPExmlt">xmlt</a></code> </pre>
+<pre><span id="TYPExmltree"><span class="keyword">type</span> xmltree</span> = <code class="type">xmltree <a href="Xmldiff.html#TYPExmlt">xmlt</a></code> </pre>
 <div class="info">
 Simple XML tree.<br/>
 </div>
-
-
-<pre><span id="TYPEcost"><span class="keyword">type</span> cost</span> = <code class="type">int</code> </pre>
 
 
 <pre><code><span id="TYPElabel"><span class="keyword">type</span> label</span> = </code></pre><table class="typetable">
@@ -102,57 +91,39 @@ Simple XML tree.<br/>
 
 
 
-<pre><code><span id="TYPEcost_funs"><span class="keyword">type</span> cost_funs</span> = {</code></pre><table class="typetable">
-<tr>
-<td align="left" valign="top">
-<code>  </code></td>
-<td align="left" valign="top">
-<code><span id="TYPEELTcost_funs.cost_insert">cost_insert</span> : <code class="type">int -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><code class="code">cost_insert size t</code> will return the cost the insert
-        the given tree <code class="code">t</code> of size <code class="code">s</code>.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
-</tr>
-<tr>
-<td align="left" valign="top">
-<code>  </code></td>
-<td align="left" valign="top">
-<code><span id="TYPEELTcost_funs.cost_delete">cost_delete</span> : <code class="type">int -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><code class="code">cost_delete size t</code> will return the cost the delete
-        the given tree <code class="code">t</code> of size <code class="code">s</code>.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
-</tr>
-<tr>
-<td align="left" valign="top">
-<code>  </code></td>
-<td align="left" valign="top">
-<code><span id="TYPEELTcost_funs.cost_edit">cost_edit</span> : <code class="type"><a href="Xmldiff.html#TYPElabel">label</a> * <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt;<br/>       <a href="Xmldiff.html#TYPElabel">label</a> * <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEcost">cost</a></code>;</code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><code class="code">cost_edit (label1, t1) (label2, t2)</code> will return the cost the change
-        the first node <code class="code">t1</code> into the second node <code class="code">t2</code>.
-        <code class="code">label1</code> and <code class="code">label2</code> are two string representations allowing to
-        quickly compare the two nodes. The children of nodes are not
-        taken into account for this operation.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
-</tr></table>
-}
-
-
-
 <pre><code><span id="TYPEpatch_path"><span class="keyword">type</span> patch_path</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
 <code><span id="TYPEELTpatch_path.Path_cdata"><span class="constructor">Path_cdata</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><code class="code">Path_cdata n</code> refers to the <code class="code">n</code>th CData leaf.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+<code class="code">Path_cdata n</code> refers to the <code class="code">n</code>th CData leaf.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
 <code><span id="TYPEELTpatch_path.Path_node"><span class="constructor">Path_node</span></span> <span class="keyword">of</span> <code class="type">Xmlm.name * int * <a href="Xmldiff.html#TYPEpatch_path">patch_path</a> option</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><code class="code">Path_node (tag, n, more)</code> refers to the <code class="code">n</code>th element with tag <code class="code">tag</code>.
-      If <code class="code">more &lt;&gt; None</code> then the path goes on into the children of the referenced node.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+<code class="code">Path_node (tag, n, more)</code> refers to the <code class="code">n</code>th element with tag <code class="code">tag</code>.
+      If <code class="code">more &lt;&gt; None</code> then the path goes on into the children of the referenced node.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr></table>
 
 <div class="info">
 A path to a node in an XML tree where to perform an operation.<br/>
+</div>
+
+
+<pre><span id="TYPEposition"><span class="keyword">type</span> position</span> = <code class="type">[ `After | `FirstChild ]</code> </pre>
+<div class="info">
+When inserting or moving a node, this indicates whether to
+  insert the tree as first node of the node corresponding to the given
+  path, or as a right sibling.<br/>
 </div>
 
 
@@ -161,36 +132,63 @@ A path to a node in an XML tree where to perform an operation.<br/>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
-<code><span id="TYPEELTpatch_operation.PInsertTree"><span class="constructor">PInsertTree</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a></code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">Insert the given XML tree after the referenced node.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<code><span id="TYPEELTpatch_operation.PInsert"><span class="constructor">PInsert</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a> * <a href="Xmldiff.html#TYPEposition">position</a></code></code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Insert the given XML tree to the given path and position.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
-<code><span id="TYPEELTpatch_operation.PDeleteTree"><span class="constructor">PDeleteTree</span></span></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">Delete the referenced node.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<code><span id="TYPEELTpatch_operation.PDelete"><span class="constructor">PDelete</span></span></code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Delete the referenced node.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
 <code><span id="TYPEELTpatch_operation.PUpdateCData"><span class="constructor">PUpdateCData</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">Change the referenced node to a CData with the given contents.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Change the referenced node to a CData with the given contents.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
 <code><span id="TYPEELTpatch_operation.PUpdateNode"><span class="constructor">PUpdateNode</span></span> <span class="keyword">of</span> <code class="type">Xmlm.name * string Nmap.t</code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">Update the referenced node to be a tag with the given attributes and no child.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Update the referenced node to be a tag with the given attributes.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top">
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top">
 <code><span id="TYPEELTpatch_operation.PReplace"><span class="constructor">PReplace</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPExmltree">xmltree</a></code></code></td>
-<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top">Replace the referenced node by the given tree.</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Replace the referenced node by the given tree.<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top">
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top">
+<code><span id="TYPEELTpatch_operation.PMove"><span class="constructor">PMove</span></span> <span class="keyword">of</span> <code class="type"><a href="Xmldiff.html#TYPEpatch_path">patch_path</a> * <a href="Xmldiff.html#TYPEposition">position</a></code></code></td>
+<td align="left" class="typefieldcomment" valign="top"><code>(*</code></td><td align="left" class="typefieldcomment" valign="top"><div class="info">
+Move the node to the given path and position. In this case,
+     the position must be considered when the node has been removed from the tree (this
+     is important when moving a node under the same parent).<br/>
+</div>
+</td><td align="left" class="typefieldcomment" valign="bottom"><code>*)</code></td>
 </tr></table>
 
 <div class="info">
@@ -202,35 +200,27 @@ The patch operations. Each operation is to be performed at a
 <pre><span id="TYPEpatch"><span class="keyword">type</span> patch</span> = <code class="type">(<a href="Xmldiff.html#TYPEpatch_path">patch_path</a> * <a href="Xmldiff.html#TYPEpatch_operation">patch_operation</a>) list</code> </pre>
 
 
-<pre><span id="VALdefault_costs"><span class="keyword">val</span> default_costs</span> : <code class="type"><a href="Xmldiff.html#TYPEcost_funs">cost_funs</a></code></pre><div class="info">
-Default cost functions, defined as:<ul>
-<li>cost_insert size _ = size</li>
-<li>cost_delete size _ = max (size / 4) 1</li>
-<li>cost_edit (label1, _) (label2,_) = if label1 = label2 then 0 else 1</li>
-</ul>
-
-By defining cost functions, you can tune the precision of operations.
-For example, if insertions and deletions are cheap, the algorithm
-will return a single operation replacing the first tree by the second one.<br/>
+<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">?cut:(<a href="Xmldiff.html#TYPEname">name</a> -&gt; string Nmap.t -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> list -&gt; bool) -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEpatch">patch</a></code></pre><div class="info">
+<code class="code">diff t1 t2</code> returns the patch <code class="code">p</code> to change <code class="code">t1</code> into <code class="code">t2</code>.<br/>
 </div>
-
-<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">?fcost:<a href="Xmldiff.html#TYPEcost_funs">cost_funs</a> -&gt;<br/>       ?cut:(<a href="Xmldiff.html#TYPEname">name</a> -&gt; string Nmap.t -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> list -&gt; bool) -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; int * <a href="Xmldiff.html#TYPEpatch">patch</a></code></pre><div class="info">
-<code class="code">diff t1 t2</code> returns the pair <code class="code">(c, p)</code>, with <code class="code">c</code> being the cost
-  to change <code class="code">t1</code> into <code class="code">t2</code> and <code class="code">p</code> the corresponding patch.<br/>
-</div>
-<div class="param_info"><code class="code">fcost</code> : can be used to specify alternative cost functions.</div>
 <div class="param_info"><code class="code">cut</code> : is called on XML tree tag nodes; returning <code class="code">true</code> means
   that that subnodes won't be compared separately, but the whole node
   will be compared as is. This is useful in case of big XML trees, otherwise
   a lot of comparisons are done between the two trees. For example,
   one can cut on &quot;p&quot;, &quot;pre&quot;, &quot;ul&quot; and &quot;code&quot; tags in a regular web page.
   Default behaviour is to cut nothing.</div>
+
+<pre><span id="VALdiff_with_final_tree"><span class="keyword">val</span> diff_with_final_tree</span> : <code class="type">?cut:(<a href="Xmldiff.html#TYPEname">name</a> -&gt; string Nmap.t -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> list -&gt; bool) -&gt;<br/>       <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; <a href="Xmldiff.html#TYPEpatch">patch</a> * <a href="Xmldiff.html#TYPExmltree">xmltree</a></code></pre><div class="info">
+Same as <a href="Xmldiff.html#VALdiff"><code class="code">Xmldiff.diff</code></a> but returns also the patched tree, to be able to
+  compare it with the given target tree (for testing purpose).<br/>
+</div>
 <br/>
 <div class="section-title" id="2_Utilities">Utilities</div><br/>
 
 <pre><span id="VALxml_of_string"><span class="keyword">val</span> xml_of_string</span> : <code class="type">string -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a></code></pre>
 <pre><span id="VALxml_of_file"><span class="keyword">val</span> xml_of_file</span> : <code class="type">string -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a></code></pre>
 <pre><span id="VALatts_of_map"><span class="keyword">val</span> atts_of_map</span> : <code class="type">string Nmap.t -&gt; (<a href="Xmldiff.html#TYPEname">name</a> * string) list</code></pre>
+<pre><span id="VALatts_of_list"><span class="keyword">val</span> atts_of_list</span> : <code class="type">(<a href="Xmldiff.html#TYPEname">name</a> * string) list -&gt; string Nmap.t</code></pre>
 <pre><span id="VALstring_of_xml"><span class="keyword">val</span> string_of_xml</span> : <code class="type">?cut:bool -&gt; <a href="Xmldiff.html#TYPExmltree">xmltree</a> -&gt; string</code></pre>
 <pre><span id="VALstring_of_name"><span class="keyword">val</span> string_of_name</span> : <code class="type">string * string -&gt; string</code></pre>
 <pre><span id="VALstring_of_atts"><span class="keyword">val</span> string_of_atts</span> : <code class="type">string Nmap.t -&gt; string</code></pre>

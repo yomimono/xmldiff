@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<title>Xmldiff : Xmldiff : Xmldiff_js</title>
+<link href="http://zoggy.github.io/xmldiff/style.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="page">
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+
+
+  <div class="nav-collapse">
+    <ul class="nav">
+    <li class="&lt;navbar-home/&gt;"><a href="http://zoggy.github.io/xmldiff/index.html">Xml-diff</a></li>
+    <li class="active"><a href="http://zoggy.github.io/xmldiff/refdoc/">Documentation</a></li>
+
+  </ul>
+  <div class="nav pull-right">  </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div id="header">
+  
+  
+  
+</div>
+
+
+
+<div class="ocamldoc-page">
+<div class="navbar"><a class="pre" href="Xmldiff.html" title="Xmldiff">Previous</a>
+ <a class="up" href="index.html" title="Index">Up</a>
+ </div>
+<h1>Module <a href="type_Xmldiff_js.html">Xmldiff_js</a></h1>
+
+<pre><span class="keyword">module</span> Xmldiff_js: <code class="code">sig</code> <a href="Xmldiff_js.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Applying patches to DOM. To use with <code class="code">js_of_ocaml</code>.<br/>
+</div>
+<hr width="100%"/>
+
+<pre><span id="VALlog"><span class="keyword">val</span> log</span> : <code class="type">string -&gt; unit</code></pre>
+<pre><span id="VALdom_of_xml"><span class="keyword">val</span> dom_of_xml</span> : <code class="type"><a href="Xmldiff.html#TYPExmltree">Xmldiff.xmltree</a> -&gt; Dom.node Js.t</code></pre><div class="info">
+Create a DOM node tree from the given XML tree.<br/>
+</div>
+
+<pre><span id="VALdom_node_by_path"><span class="keyword">val</span> dom_node_by_path</span> : <code class="type">?skip_node:(Dom.node Js.t -&gt; bool) -&gt; <a href="Xmldiff.html#TYPEpatch_path">Xmldiff.patch_path</a> -&gt; Dom.node Js.t</code></pre><div class="info">
+<code class="code">dom_node_by_path path</code> returns the DOM node corresponding to
+ the given <code class="code">path</code> or raise <code class="code">Not_found</code>.<br/>
+</div>
+<div class="param_info"><code class="code">skip_node</code> : is a function taking the current node and returning <code class="code">true</code>
+   if the node must not be taken into account during the lookup. Default is
+   to not skip any node (a function returning always <code class="code">false</code>).</div>
+
+<pre><span id="VALapply_dom_patch"><span class="keyword">val</span> apply_dom_patch</span> : <code class="type">?skip_node:(Dom.node Js.t -&gt; bool) -&gt;<br/>       (<a href="Xmldiff.html#TYPEpatch_path">Xmldiff.patch_path</a> * <a href="Xmldiff.html#TYPEpatch_operation">Xmldiff.patch_operation</a>) list -&gt; unit</code></pre><div class="info">
+<code class="code">apply_dom_patch patch</code> applies the given patch to the DOM.<br/>
+</div>
+<div class="param_info"><code class="code">skip_node</code> : see <a href="Xmldiff_js.html#VALdom_node_by_path"><code class="code">Xmldiff_js.dom_node_by_path</code></a>.</div>
+</div>
+
+
+
+
+
+
+
+
+</div> 
+</body>
+</html>
