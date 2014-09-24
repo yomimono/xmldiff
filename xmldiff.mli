@@ -67,20 +67,20 @@ type position = [`FirstChild | `After]
 (** The patch operations. Each operation is to be performed at a
   given node (position) in the tree, referenced by a {!patch_path}. *)
 type patch_operation =
-  | PInsert of xmltree * position (** Insert the given XML tree *)
+  | PInsert of xmltree * position (** Insert the given XML tree to the given path and position. *)
   | PDelete (** Delete the referenced node. *)
   | PUpdateCData of string (** Change the referenced node to a CData with the given contents. *)
   | PUpdateNode of Xmlm.name * string Nmap.t
-      (** Update the referenced node to be a tag with the given attributes and no child. *)
+      (** Update the referenced node to be a tag with the given attributes. *)
   | PReplace of xmltree
       (** Replace the referenced node by the given tree. *)
-  | PMove of patch_path * position (** Move the node to the given path and position *)
+  | PMove of patch_path * position (** Move the node to the given path and position. In this case,
+     the position must be considered when the node has been removed from the tree (this
+     is important when moving a node under the same parent). *)
 
 type patch = (patch_path * patch_operation) list
 
-(** [diff t1 t2] returns the pair [(c, p)], with [c] being the cost
-  to change [t1] into [t2] and [p] the corresponding patch.
-  @param fcost can be used to specify alternative cost functions.
+(** [diff t1 t2] returns the patch [p] to change [t1] into [t2].
   @param cut is called on XML tree tag nodes; returning [true] means
   that that subnodes won't be compared separately, but the whole node
   will be compared as is. This is useful in case of big XML trees, otherwise
