@@ -21,6 +21,21 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <subsection id="releases" title="Releases">
 <ul>
+<li><a href="xmldiff-0.3.0.tar.gz">0.3.0</a> [2014-09-24]:
+<ul>
+<li>Change the algorithm, now use Gregory Cobena's
+  <a href="http://gregory.cobena.free.fr/www/Publications/thesis_draft.pdf">Xydiff</a> algorithm,</li>
+<li>Change of the patch operation set, now includes <ml>Move</ml>
+    and Insert operation can be as <ml>`FirstChild</ml> of a node or
+    <ml>`After</ml> a node.
+</li>
+<li>If js_of_ocaml is installed, a <icode>xmldiff.js</icode> package is installed.
+  The <a href="refdoc/Xmldiff_js.html">Xmldiff_js</a> module contains
+  a function to apply a patch to the DOM.
+</li>
+</ul>
+</li>
+
 <li><a href="xmldiff-0.2.tar.gz">0.2</a> [2014-09-08]:
 <ul>
 <li>Fix <ext-a href="https://github.com/zoggy/xmldiff/issues/2">#2</ext-a>:
@@ -32,6 +47,7 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
   by lowering precision under some tags.</li>
 </ul>
 </li>
+
 <li><a href="xmldiff-0.1.tar.gz">0.1</a> [2014-03-03]: Initial release.</li>
 </ul>
 </subsection>
@@ -39,9 +55,14 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <section id="install" title="Installation">
 <p>
-Xmldiff requires <a href="http://erratique.ch/software/xmlm">Xmlm >= 1.1.0</a>
-to be installed.
+To be installed, Xmldiff requires:
 </p>
+<ul>
+<li>OCaml &gt;= 4.02.0,</li>
+<li><a href="http://erratique.ch/software/xmlm">Xmlm >= 1.1.0</a>,</li>
+<li><a href="http://ocsigen.org/js_of_ocaml">Js_of_ocaml >= 2.4.0</a> [optional,
+  for the <icode>xmldiff.js</icode> package]</li>
+</ul>
 <p>To compile and install:
 </p>
 <ul>
@@ -50,7 +71,8 @@ to be installed.
 <li><span class="shell">make all install</span></li>
 </ul>
 <p>
-This will install the <tt>xmldiff</tt> package with findlib.
+This will install the <icode>xmldiff</icode> package
+(and eventually the <icode>xmldiff.js</icode>) with findlib.
 </p>
 </section>
 

@@ -5,21 +5,41 @@
 <h1>Index of values</h1>
 <table>
 <tr><td align="left"><br/>A</td></tr>
+<tr><td><a href="Xmldiff_js.html#VALapply_dom_patch">apply_dom_patch</a> [<a href="Xmldiff_js.html">Xmldiff_js</a>]</td>
+<td><div class="info">
+<code class="code">apply_dom_patch patch</code> applies the given patch to the DOM.
+</div>
+</td></tr>
+<tr><td><a href="Xmldiff.html#VALatts_of_list">atts_of_list</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
+<td></td></tr>
 <tr><td><a href="Xmldiff.html#VALatts_of_map">atts_of_map</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br/>D</td></tr>
-<tr><td><a href="Xmldiff.html#VALdefault_costs">default_costs</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
-<td><div class="info">
-Default cost functions, defined as: cost_insert size _ = size, cost_delete size _ = max (size / 4) 1, cost_edit (label1, _) (label2,_) = if label1 = label2 then 0 else 1
-By defining cost functions, you can tune the precision of operations.
-</div>
-</td></tr>
 <tr><td><a href="Xmldiff.html#VALdiff">diff</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
 <td><div class="info">
-<code class="code">diff t1 t2</code> returns the pair <code class="code">(c, p)</code>, with <code class="code">c</code> being the cost
-  to change <code class="code">t1</code> into <code class="code">t2</code> and <code class="code">p</code> the corresponding patch.
+<code class="code">diff t1 t2</code> returns the patch <code class="code">p</code> to change <code class="code">t1</code> into <code class="code">t2</code>.
 </div>
 </td></tr>
+<tr><td><a href="Xmldiff.html#VALdiff_with_final_tree">diff_with_final_tree</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
+<td><div class="info">
+Same as <a href="Xmldiff.html#VALdiff"><code class="code">Xmldiff.diff</code></a> but returns also the patched tree, to be able to
+  compare it with the given target tree (for testing purpose).
+</div>
+</td></tr>
+<tr><td><a href="Xmldiff_js.html#VALdom_node_by_path">dom_node_by_path</a> [<a href="Xmldiff_js.html">Xmldiff_js</a>]</td>
+<td><div class="info">
+<code class="code">dom_node_by_path path</code> returns the DOM node corresponding to
+ the given <code class="code">path</code> or raise <code class="code">Not_found</code>.
+</div>
+</td></tr>
+<tr><td><a href="Xmldiff_js.html#VALdom_of_xml">dom_of_xml</a> [<a href="Xmldiff_js.html">Xmldiff_js</a>]</td>
+<td><div class="info">
+Create a DOM node tree from the given XML tree.
+</div>
+</td></tr>
+<tr><td align="left"><br/>L</td></tr>
+<tr><td><a href="Xmldiff_js.html#VALlog">log</a> [<a href="Xmldiff_js.html">Xmldiff_js</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br/>S</td></tr>
 <tr><td><a href="Xmldiff.html#VALstring_of_atts">string_of_atts</a> [<a href="Xmldiff.html">Xmldiff</a>]</td>
 <td></td></tr>

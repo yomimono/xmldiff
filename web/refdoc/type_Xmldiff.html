@@ -33,35 +33,32 @@
 &#160;&#160;&#160;&#160;<span class="keyword">end</span><br/>
 &#160;&#160;<span class="keyword">type</span>&#160;<span class="keywordsign">'</span>a&#160;xmlt&#160;=<br/>
 &#160;&#160;&#160;&#160;&#160;&#160;[&#160;<span class="keywordsign">`</span><span class="constructor">D</span>&#160;<span class="keyword">of</span>&#160;string&#160;<span class="keywordsign">|</span>&#160;<span class="keywordsign">`</span><span class="constructor">E</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmldiff</span>.name&#160;*&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t&#160;*&#160;<span class="keywordsign">'</span>a&#160;list&#160;]<br/>
-&#160;&#160;<span class="keyword">type</span>&#160;xmltree&#160;=&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="constructor">Xmldiff</span>.xmlt<br/>
-&#160;&#160;<span class="keyword">type</span>&#160;cost&#160;=&#160;int<br/>
+&#160;&#160;<span class="keyword">type</span>&#160;xmltree&#160;=&#160;xmltree&#160;<span class="constructor">Xmldiff</span>.xmlt<br/>
 &#160;&#160;<span class="keyword">type</span>&#160;label&#160;=&#160;<span class="constructor">Node</span>&#160;<span class="keyword">of</span>&#160;string&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">Text</span>&#160;<span class="keyword">of</span>&#160;string<br/>
-&#160;&#160;<span class="keyword">type</span>&#160;cost_funs&#160;=&#160;{<br/>
-&#160;&#160;&#160;&#160;cost_insert&#160;:&#160;int&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.cost;<br/>
-&#160;&#160;&#160;&#160;cost_delete&#160;:&#160;int&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.cost;<br/>
-&#160;&#160;&#160;&#160;cost_edit&#160;:<br/>
-&#160;&#160;&#160;&#160;&#160;&#160;<span class="constructor">Xmldiff</span>.label&#160;*&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span><br/>
-&#160;&#160;&#160;&#160;&#160;&#160;<span class="constructor">Xmldiff</span>.label&#160;*&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.cost;<br/>
-&#160;&#160;}<br/>
 &#160;&#160;<span class="keyword">type</span>&#160;patch_path&#160;=<br/>
 &#160;&#160;&#160;&#160;&#160;&#160;<span class="constructor">Path_cdata</span>&#160;<span class="keyword">of</span>&#160;int<br/>
 &#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">Path_node</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmlm</span>.name&#160;*&#160;int&#160;*&#160;<span class="constructor">Xmldiff</span>.patch_path&#160;option<br/>
+&#160;&#160;<span class="keyword">type</span>&#160;position&#160;=&#160;[&#160;<span class="keywordsign">`</span><span class="constructor">After</span>&#160;<span class="keywordsign">|</span>&#160;<span class="keywordsign">`</span><span class="constructor">FirstChild</span>&#160;]<br/>
 &#160;&#160;<span class="keyword">type</span>&#160;patch_operation&#160;=<br/>
-&#160;&#160;&#160;&#160;&#160;&#160;<span class="constructor">PInsertTree</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmldiff</span>.xmltree<br/>
-&#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PDeleteTree</span><br/>
+&#160;&#160;&#160;&#160;&#160;&#160;<span class="constructor">PInsert</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;*&#160;<span class="constructor">Xmldiff</span>.position<br/>
+&#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PDelete</span><br/>
 &#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PUpdateCData</span>&#160;<span class="keyword">of</span>&#160;string<br/>
 &#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PUpdateNode</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmlm</span>.name&#160;*&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t<br/>
 &#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PReplace</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmldiff</span>.xmltree<br/>
+&#160;&#160;&#160;&#160;<span class="keywordsign">|</span>&#160;<span class="constructor">PMove</span>&#160;<span class="keyword">of</span>&#160;<span class="constructor">Xmldiff</span>.patch_path&#160;*&#160;<span class="constructor">Xmldiff</span>.position<br/>
 &#160;&#160;<span class="keyword">type</span>&#160;patch&#160;=&#160;(<span class="constructor">Xmldiff</span>.patch_path&#160;*&#160;<span class="constructor">Xmldiff</span>.patch_operation)&#160;list<br/>
-&#160;&#160;<span class="keyword">val</span>&#160;default_costs&#160;:&#160;<span class="constructor">Xmldiff</span>.cost_funs<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;diff&#160;:<br/>
-&#160;&#160;&#160;&#160;?fcost:<span class="constructor">Xmldiff</span>.cost_funs&#160;<span class="keywordsign">-&gt;</span><br/>
 &#160;&#160;&#160;&#160;?cut:(<span class="constructor">Xmldiff</span>.name&#160;<span class="keywordsign">-&gt;</span><br/>
 &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;list&#160;<span class="keywordsign">-&gt;</span>&#160;bool)&#160;<span class="keywordsign">-&gt;</span><br/>
-&#160;&#160;&#160;&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;int&#160;*&#160;<span class="constructor">Xmldiff</span>.patch<br/>
+&#160;&#160;&#160;&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.patch<br/>
+&#160;&#160;<span class="keyword">val</span>&#160;diff_with_final_tree&#160;:<br/>
+&#160;&#160;&#160;&#160;?cut:(<span class="constructor">Xmldiff</span>.name&#160;<span class="keywordsign">-&gt;</span><br/>
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;list&#160;<span class="keywordsign">-&gt;</span>&#160;bool)&#160;<span class="keywordsign">-&gt;</span><br/>
+&#160;&#160;&#160;&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.patch&#160;*&#160;<span class="constructor">Xmldiff</span>.xmltree<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;xml_of_string&#160;:&#160;string&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;xml_of_file&#160;:&#160;string&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;atts_of_map&#160;:&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t&#160;<span class="keywordsign">-&gt;</span>&#160;(<span class="constructor">Xmldiff</span>.name&#160;*&#160;string)&#160;list<br/>
+&#160;&#160;<span class="keyword">val</span>&#160;atts_of_list&#160;:&#160;(<span class="constructor">Xmldiff</span>.name&#160;*&#160;string)&#160;list&#160;<span class="keywordsign">-&gt;</span>&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;string_of_xml&#160;:&#160;?cut:bool&#160;<span class="keywordsign">-&gt;</span>&#160;<span class="constructor">Xmldiff</span>.xmltree&#160;<span class="keywordsign">-&gt;</span>&#160;string<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;string_of_name&#160;:&#160;string&#160;*&#160;string&#160;<span class="keywordsign">-&gt;</span>&#160;string<br/>
 &#160;&#160;<span class="keyword">val</span>&#160;string_of_atts&#160;:&#160;string&#160;<span class="constructor">Xmldiff</span>.<span class="constructor">Nmap</span>.t&#160;<span class="keywordsign">-&gt;</span>&#160;string<br/>

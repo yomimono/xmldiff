@@ -27,7 +27,7 @@ include master.Makefile
 
 PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
-COMPFLAGS=-annot -bin-annot -g
+COMPFLAGS=-annot -bin-annot -g -safe-string
 OCAMLPP=
 
 OCAMLFIND=ocamlfind
@@ -71,9 +71,9 @@ dump.odoc:
 		$(OCAMLFIND) ocamldoc $(OF_FLAGS) -package js_of_ocaml \
 		xmldiff_js.mli -load dump.odoc -dump dump.odoc ; fi
 
-docstog:
+docstog: dump.odoc
 	$(MKDIR) web/refdoc
-	$(OCAMLFIND) ocamldoc $(OF_FLAGS) xmldiff.mli \
+	$(OCAMLFIND) ocamldoc -load dump.odoc \
 	-t Xmldiff -d web/refdoc -g odoc_stog.cmo
 
 webdoc:
