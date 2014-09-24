@@ -52,7 +52,7 @@ xmldiff.cmo: xmldiff.cmi xmldiff.ml
 xmldiff.cmi xmldiff.cmti: xmldiff.mli
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) $<
 
-$(LIB_JS): xmldiff.cmo xmldiff.cmi xmldiff_js.cmo
+$(LIB_JS): xmldiff.cmi xmldiff.cmo xmldiff_js.cmi xmldiff_js.cmo
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -package js_of_ocaml -a -o $@ \
 	xmldiff.cmo xmldiff_js.cmo
 
@@ -60,10 +60,16 @@ test-xmldiff: xmldiff.cmx test_xmldiff.ml
 	$(OCAMLFIND) ocamlopt $(OF_FLAGS) $(COMPFLAGS) -o $@ -linkpkg $^
 
 ##########
-.PHONY: doc
-doc:
+.PHONY: doc dump.odoc
+doc: dump.odoc
 	$(MKDIR) doc
-	$(OCAMLFIND) ocamldoc $(OF_FLAGS) xmldiff.mli -t Xmldiff -d doc -html
+	$(OCAMLFIND) ocamldoc -load dump.odoc -t Xmldiff -d doc -html
+
+dump.odoc:
+	$(OCAMLFIND) ocamldoc $(OF_FLAGS) xmldiff.mli -dump dump.odoc
+	if test -n "$(LIB_JS)"; then \
+		$(OCAMLFIND) ocamldoc $(OF_FLAGS) -package js_of_ocaml \
+		xmldiff_js.mli -load dump.odoc -dump dump.odoc ; fi
 
 docstog:
 	$(MKDIR) web/refdoc

@@ -23,7 +23,7 @@
 (*                                                                               *)
 (*********************************************************************************)
 
-(** Applying patches to DOM.*)
+(** *)
 
 module Xdiff = Xmldiff
 
@@ -65,7 +65,7 @@ let dom_of_xml =
     map doc t
 ;;
 
-let dom_node_by_path skip_node path =
+let dom_node_by_path ?(skip_node=(fun _->false)) path =
   let doc = Dom_html.document in
   let rec next node path =
     let node = Js.Opt.get (node##nextSibling)
@@ -104,7 +104,7 @@ let dom_node_by_path skip_node path =
   in
   on_child (doc:>Dom.node Js.t) path
 
-let apply_patch_operation skip_node (path, op) =
+let apply_patch_operation ?skip_node (path, op) =
   log (Xmldiff.string_of_patch_operation (path, op));
   let parent node = Js.Opt.get (node##parentNode) (fun _ -> assert false) in
   let apply node op =
@@ -140,7 +140,7 @@ let apply_patch_operation skip_node (path, op) =
     | Xdiff.PMove (newpath, pos) ->
         let parent_node = parent node in
         let removed_node = parent_node##removeChild(node) in
-        let new_loc = dom_node_by_path skip_node newpath in
+        let new_loc = dom_node_by_path ?skip_node newpath in
         match pos with
         | `FirstChild ->
              ignore(new_loc##insertBefore(removed_node, (new_loc##firstChild)))
@@ -148,8 +148,8 @@ let apply_patch_operation skip_node (path, op) =
             let new_parent = parent new_loc in
             ignore(new_parent##insertBefore(removed_node, (new_loc##nextSibling)));
   in
-  let node = dom_node_by_path skip_node path in
+  let node = dom_node_by_path ?skip_node path in
   apply (node:>Dom.node Js.t) op
 ;;
 
-let apply_dom_patch skip_node l = List.iter (apply_patch_operation skip_node) l ;;
+let apply_dom_patch ?skip_node l = List.iter (apply_patch_operation ?skip_node) l ;;
