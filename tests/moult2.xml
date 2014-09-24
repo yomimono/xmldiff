@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Introduction au langage OCaml -- Introduction au langage OCaml</title><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<link href="http://form-ocaml.forge.ocamlcore.org/style.css" rel="stylesheet" type="text/css"/>
+
+
+<link href="http://fonts.googleapis.com/css?family=Courgette" rel="stylesheet" type="text/css"/>
+
+
+
+<link href="/favicon.png" rel="shortcut icon" type="image/png"/>
+<rssfeed></rssfeed>
+</head>
+<body>
+<div id="page">
+<div id="header">
+<div id="site-title"><a href="http://form-ocaml.forge.ocamlcore.org/index.html">Introduction au langage OCaml</a></div>
+<div class="site-desc"></div>
+</div>
+
+
+
+<span> </span>
+<span></span>
+<div class="" id="doc-body">
+
+
+<div class="img-float-right"><ul class="toc"><li class="toc-section"><a href="http://form-ocaml.forge.ocamlcore.org/#supports">Accès aux supports</a></li><li class="toc-section"><a href="http://form-ocaml.forge.ocamlcore.org/#updates">Dernières nouvelles</a></li><li class="toc-section"><a href="http://form-ocaml.forge.ocamlcore.org/#hosting">Hébergement et développement</a></li><li class="toc-section"><a href="http://form-ocaml.forge.ocamlcore.org/#licence">Licence</a></li><li class="toc-section"><a href="http://form-ocaml.forge.ocamlcore.org/#contact">Auteur et contact</a></li></ul></div>
+<p id="Cesitehbergeunsupportdec"><a class="paragraph-url" href="#Cesitehbergeunsupportdec"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Ce site héberge un support de cours que j'ai écrit pour une introduction au langage OCaml
+sous forme de travaux pratiques. J'assure régulièrement cette formation
+dans les centres INRIA de Rocquencourt et Saclay. Je la mets à disposition pour
+permettre une utilisation similaire.
+</p>
+<p id="Touteslesexplicationsdon"><a class="paragraph-url" href="#Touteslesexplicationsdon"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Toutes les explications données pendant la formation ne sont pas (encore?) écrites. Je
+pense notamment à la notion d'environnement d'évaluation qui mériterait quelques
+schémas (je réfléchis à faire générer des figures automatiquement pour
+illustrer ce propos).
+</p>
+
+<p id="Unprrequispourcetteforma"><a class="paragraph-url" href="#Unprrequispourcetteforma"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Un pré-requis pour cette formation est une connaissance de la programmation
+(algorithmique notamment). Selon le niveau, les modules choisis et pour
+faire tous les exercices, compter entre deux et cinq jours.
+</p>
+<p id="Merciceuxayantdjsuivicet"><a class="paragraph-url" href="#Merciceuxayantdjsuivicet"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Merci à ceux ayant déjà suivi cette formation pour leurs retours, ainsi qu'à
+Xavier Clerc pour ses relectures attentives.
+</p>
+
+<div class="section"><div class="section-title" id="supports">Accès aux supports</div>
+<p id="Lesupportrdigestdisponib"><a class="paragraph-url" href="#Lesupportrdigestdisponib"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+<a href="http://form-ocaml.forge.ocamlcore.org/intro.html">Le support rédigé est disponible ici</a>. La dernière modification date
+du 15 septembre 2014.
+</p>
+<p id="Destransparentssontaussi"><a class="paragraph-url" href="#Destransparentssontaussi"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>Des &quot;transparents&quot; sont aussi accessibles:</p>
+<ul>
+<li><a href="http://form-ocaml.forge.ocamlcore.org/slides/slides_loops_2012_12_11.html">Présentation à la journée LoOPS du 11 décembre 2012</a>,</li>
+<li><a href="http://form-ocaml.forge.ocamlcore.org/slides/slides.html">Atelier à la journée LoOPS du 11 décembre 2012</a>.</li>
+</ul>
+<p id="Enfindautresexemplesetex"><a class="paragraph-url" href="#Enfindautresexemplesetex"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Enfin, <a href="http://form-ocaml.forge.ocamlcore.org/exemples.html">d'autres exemples et exercices</a> viennent enrichir le site,
+ainsi qu'une <a href="http://form-ocaml.forge.ocamlcore.org/faq.html">foire aux questions</a>.
+</p>
+</div>
+
+<div class="section"><div class="section-title" id="updates">Dernières nouvelles</div>
+<div class="rss-button"><a href="blog.rss"><img alt="Rss feed" src="rss.png"/></a></div>
+<div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">lundi 15 septembre 2014</div>
+<div class="doc-item-title">
+
+    Ajout d'un module <a href="http://form-ocaml.forge.ocamlcore.org/modules/parallele.html">Parallélisme, concurrence</a>.
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">mercredi 25 juin 2014</div>
+<div class="doc-item-title">
+
+    Ajout de modules: <a href="http://form-ocaml.forge.ocamlcore.org/modules/objets.html">Programmation Orientée Objets</a> et <a href="http://form-ocaml.forge.ocamlcore.org/modules/tests.html">Test de code OCaml</a>.
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">jeudi 3 avril 2014</div>
+<div class="doc-item-title">
+
+    Dépendances entre les modules, amélioration du style
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">lundi 7 octobre 2013</div>
+<div class="doc-item-title">
+
+    Mise à jour: liens, OCaml 4.01 + corrections de typos.
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">mercredi 23 janvier 2013</div>
+<div class="doc-item-title">
+
+    <link href="http://form-ocaml.forge.ocamlcore.org/posts/code_morse.html" itemprop="url"/>
+    <a href="http://form-ocaml.forge.ocamlcore.org/posts/code_morse.html"><span itemprop="name">Code Morse</span></a>
+  
+</div>
+<div class="doc-intro" itemprop="headline">
+<p id="Nousallonsraliserunprogr"><a class="paragraph-url" href="#Nousallonsraliserunprogr"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>Nous allons réaliser un programme simple effectuant
+la transcription depuis et vers du code Morse.
+</p>
+<a href="http://form-ocaml.forge.ocamlcore.org/posts/code_morse.html"><img alt="next" src="http://form-ocaml.forge.ocamlcore.org/next.png"/></a></div>
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">lundi 17 décembre 2012</div>
+<div class="doc-item-title">
+
+    <link href="http://form-ocaml.forge.ocamlcore.org/posts/date_du_jour.html" itemprop="url"/>
+    <a href="http://form-ocaml.forge.ocamlcore.org/posts/date_du_jour.html"><span itemprop="name">Afficher la date du jour</span></a>
+  
+</div>
+<div class="doc-intro" itemprop="headline">
+<p id="aouciuu"><a class="paragraph-url" href="#aouciuu"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>Nous allons réaliser un programme simple affichant la date du jour
+sur la sortie standard.
+</p>
+<a href="http://form-ocaml.forge.ocamlcore.org/posts/date_du_jour.html"><img alt="next" src="http://form-ocaml.forge.ocamlcore.org/next.png"/></a></div>
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">lundi 17 décembre 2012</div>
+<div class="doc-item-title">
+
+    <a href="http://form-ocaml.forge.ocamlcore.org/blog.html">Ajout d'un blog avec des exemples et exercices supplémentaires.</a>
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">mercredi 12 décembre 2012</div>
+<div class="doc-item-title">
+
+    Mise en ligne des <a href="http://form-ocaml.forge.ocamlcore.org/slides/slides_loops_2012_12_11.html">'transparents'</a> utilisés pour la <span class="ext-a"><a href="http://reseau-loops.github.io/journee_2012_12.html">journée LoOPS du 11 décembre 2012&quot;</a></span>
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">mercredi 24 octobre 2012</div>
+<div class="doc-item-title">
+
+    Utilisation de <span class="ext-a"><a href="http://zoggy.github.com/stog">Stog</a></span> pour générer le support. Ajout de liens vers des outils.&quot;
+  
+</div>
+
+</div><div class="doc-item" itemprop="blogPosts" itemscope="" itemtype="http://schema.org/BlogPosting">
+<div class="date">mercredi 8 février 2012</div>
+<div class="doc-item-title">
+
+    Corrections de typos, ajout des liens vers ODT, OCaml editor, TryOCaml et la version française du cours de programmation système en OCaml
+  
+</div>
+
+</div>
+</div>
+
+<div class="section"><div class="section-title" id="hosting">Hébergement et développement</div>
+<p id="Cesupportdeformationesth"><a class="paragraph-url" href="#Cesupportdeformationesth"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>Ce support de formation est hébergé sur la
+<a href="http://forge.ocamlcore.org/">forge OCaml</a>,
+et les sources y sont également disponibles:
+ <a href="http://forge.ocamlcore.org/projects/form-ocaml/">http://forge.ocamlcore.org/projects/form-ocaml/</a>
+</p>
+</div>
+
+<div class="section"><div class="section-title" id="licence">Licence</div>
+<p id="IntroductionaulangageOCa"><a class="paragraph-url" href="#IntroductionaulangageOCa"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+<span class="ext-a"><a href="http://creativecommons.org/licenses/by-nc-sa/2.0/fr/"><img alt="Creative Commons License" src="http://i.creativecommons.org/l/by-nc-sa/2.0/fr/80x15.png"/></a></span><br/>&quot;Introduction au langage OCaml&quot; par <span class="ext-a"><a href="http://brion.inria.fr/%7Eguesdon/">Maxence Guesdon</a></span> est mis à disposition selon les termes de la <span class="ext-a"><a href="http://creativecommons.org/licenses/by-nc-sa/2.0/fr/" rel="license">licence Creative Commons Paternité-Pas d'Utilisation Commerciale-Partage des Conditions Initiales à l'Identique 2.0 France</a></span>.
+</p>
+</div>
+
+<div class="section"><div class="section-title" id="contact">Auteur et contact</div>
+<p id="MaxenceGuesdonMaxencePOI"><a class="paragraph-url" href="#MaxenceGuesdonMaxencePOI"><img alt="anchor" src="http://form-ocaml.forge.ocamlcore.org/paragraph-url.png"/></a>
+Maxence Guesdon <span class="icode"><span class="hl std">&lt;Maxence 'POINT' Guesdon 'AT' inria 'POINT' fr&gt;</span></span>
+</p>
+</div>
+
+
+</div>
+
+</div>
+
+<footer id="bottombar">
+</footer>
+</body>
+<script src="http://form-ocaml.forge.ocamlcore.org/jquery.js" type="text/javascript">_</script>
+<script src="http://form-ocaml.forge.ocamlcore.org/bootstrap-collapse.js" type="text/javascript">_</script>
+</html>

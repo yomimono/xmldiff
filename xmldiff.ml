@@ -324,16 +324,18 @@ let dot_of_xmlnode t =
     let n = !cpt in
     p b "\"N%d\" [ label=\"%s: %s[%d]\", fontcolor=black ];\n"
       n  (string_of_id id) (short_label xml) rank;
-    match xml with
-      `D _ -> ()
-    | `E (_,_,subs) ->
-        List.iteri (fun i child ->
+    (
+     match xml with
+       `D _ -> ()
+     | `E (_,_,subs) ->
+         List.iteri (fun i child ->
            iter (Some n) i child ;
-        )
-          subs;
-        match parent with
-          None -> ()
-        | Some parent ->  p b "\"N%d\" -> \"N%d\";\n" parent n
+         )
+           subs
+    );
+    match parent with
+      None -> ()
+    | Some parent ->  p b "\"N%d\" -> \"N%d\";\n" parent n
   in
   iter None 0 t ;
   p b "}\n";
@@ -436,7 +438,7 @@ let make_actions t1 t2 =
                    assert false
                | Some i -> i
              in
-             (Move(n1.number, new_parent, rank)) :: acc
+             (Move(n1.number, new_parent, n2.rank)) :: acc
             )
         in
         let acc =
@@ -522,7 +524,7 @@ let d_of_node t i =
   1. +. (float t.height) *. t.nodes.(i).weight /. t.w0
 
 let rec match_nodes ?(with_subs=false) t1 t2 i j =
-  (*prerr_endline (Printf.sprintf "matching %d -> %d" i j);*)
+  dbg (Printf.sprintf "matching %d -> %d" i j);
   t1.nodes.(i).matched <- Some j;
   t2.nodes.(j).matched <- Some i;
   if with_subs then
@@ -721,24 +723,43 @@ let patch_path_of_cur_path_list =
       None -> assert false
     | Some p -> p
 
+
+let rec string_of_path = function
+  Path_cdata n -> "CData("^(string_of_int n)^")"
+| Path_node (name, n, next) ->
+    let s = (string_of_name name)^"("^(string_of_int n)^")" in
+    match next with
+      None -> s
+    | Some p -> s^"/"^(string_of_path p)
+
 let path_of_id =
   let cp_of_xml = function
     `D s -> CData
   | `E (name,_,_) -> N name
   in
-  let rec forward path cur_path n = function
-  | [] -> failwith (Printf.sprintf "Invalid rank: %d element missing" n)
+  let rec forward xmlnode path cur_path n ~skip = function
+  | (Some i, _) :: q when i = skip -> forward xmlnode path cur_path n ~skip q
+  | [] ->
+      let b = Buffer.create 256 in
+      Buffer.add_string b (string_of_path (patch_path_of_cur_path_list (List.rev path)));
+      Buffer.add_char b '{';
+      Cur_path.iter (fun k n -> Printf.bprintf b "%s->%d,"
+         (match k with N name -> string_of_name name | CData -> "cdata") n) cur_path ;
+      Buffer.add_char b '}';
+      on_dbg (fun () -> file_of_string ~file: "/tmp/xmldiff_state.dot" (dot_of_xmlnode xmlnode)) ();
+      failwith (Printf.sprintf "Invalid rank: %d element missing\npath: %s" (n+1) (Buffer.contents b))
   | (_, xml) :: _ when n = 0 ->
       let cp = cp_of_xml xml in
       (cp, cur_path_get cp cur_path) :: path
-  | (_, xml) :: q ->
+  | (id, xml) :: q ->
       let cur_path =
         let cp = cp_of_xml xml in
         cur_path_inc cp cur_path
       in
-      forward path cur_path (n-1) q
+      dbg ("forward: id="^(match id with None -> "None" | Some n -> string_of_int n));
+      forward xmlnode path cur_path (n-1) ~skip q
   in
-  let rec iter ~rank i path cur_path = function
+  let rec iter xmlnode ~rank ~skip i path cur_path = function
   | (Some j, xml) when i = j ->
       begin
         let cp = cp_of_xml xml in
@@ -750,33 +771,31 @@ let path_of_id =
           | Some n ->
               match xml with
                 `D _ -> assert false
-              | `E (_,_,subs) -> (forward path Cur_path.empty (n-1) subs, `After)
+              | `E (_,_,subs) -> (forward xmlnode path Cur_path.empty (n-1) ~skip subs, `After)
         in
         (patch_path_of_cur_path_list (List.rev path), pos)
       end
-  | (Some j, _) when j < i -> raise Not_found
+(*  | (Some j, _) when j < i -> raise Not_found*)
   | (_, `D _) -> raise Not_found
   | (_, `E (name, atts, subs)) ->
-      (* None or Some j with j > i, let's go down after
-         adding cur_path to path
-         *)
+      (* let's go down after adding cur_path to path *)
       let cpt = cur_path_get (N name) cur_path in
       let path = (N name, cpt) :: path in
-      iter_list ~rank i path Cur_path.empty subs
+      iter_list xmlnode ~rank ~skip i path Cur_path.empty subs
 
-  and iter_list ~rank i path cur_path = function
+  and iter_list xmlnode ~rank ~skip i path cur_path = function
     [] -> raise Not_found
   | h :: q ->
-    try iter ~rank i path cur_path h
+    try iter xmlnode ~rank ~skip i path cur_path h
     with Not_found ->
       let cur_path =
         let cp = cp_of_xml (snd h) in
         cur_path_inc cp cur_path
       in
-      iter_list ~rank i path cur_path q
+      iter_list xmlnode ~rank ~skip i path cur_path q
   in
-  fun xmlnode ?rank i ->
-    try iter ~rank i [] Cur_path.empty xmlnode
+  fun xmlnode ?rank ?(skip=(-1)) i ->
+    try iter xmlnode ~rank ~skip i [] Cur_path.empty xmlnode
     with Not_found ->
       let msg = "Id "^(string_of_int i)^" not found" in
       failwith msg
@@ -788,6 +807,27 @@ let rec xmlnode_of_xmltree = function
     (None, `E (name,atts, List.map xmlnode_of_xmltree subs))
 ;;
 
+let string_of_position = function
+  `FirstChild -> "FirstChild"
+| `After -> "After"
+
+let string_of_patch_operation (path, op) =
+  match op with
+  | PReplace xmltree ->
+      "REPLACE("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
+  | PInsert (xmltree, pos) ->
+      "INSERT("^(string_of_path path)^", "^(string_of_xml xmltree)^", "^(string_of_position pos)^")"
+  | PDelete ->
+      "DELETE("^(string_of_path path)^")"
+  | PUpdateCData s ->
+      Printf.sprintf "UPDATE_CDATA(%s, %S)" (string_of_path path) s
+  | PUpdateNode (name, atts) ->
+      Printf.sprintf "UPDATE_NODE(%s, %S, _)" (string_of_path path) (string_of_name name)
+  | PMove (newpath, pos) ->
+      Printf.sprintf "MOVE(%s, %s, %s)" (string_of_path path) (string_of_path newpath) (string_of_position pos)
+
+let string_of_patch l =
+  String.concat "\n" (List.map string_of_patch_operation l)
 
 let remove_xmlnode t path =
   let rec iter xmls path =
@@ -850,47 +890,56 @@ let insert_xmlnode t node path pos =
     [t] -> t
   | _ -> assert false
 
-let rec patch_xmlnode t path op =
-  match op with
-    PMove (newpath, pos) ->
-     let removed, t = remove_xmlnode t path in
-     insert_xmlnode t removed newpath pos
-  | _ ->
-      let apply xml op =
-        match xml, op with
-        | _, PReplace tree -> [xmlnode_of_xmltree tree]
-        | _, PInsert (tree, `After) -> [ xml ; xmlnode_of_xmltree tree ]
-        | (_, `D _), PInsert (_, `FirstChild) -> assert false
-        | (x, `E (tag,atts,subs)), PInsert (tree, `FirstChild) ->
-            [ (x, `E (tag, atts, xmlnode_of_xmltree tree :: subs)) ]
-        | _, PDelete -> []
-        | (x, _), PUpdateCData s -> [(x, `D s)]
-        | (x, `D _), PUpdateNode (name, atts) -> [x, `E (name,atts,[])]
-        | (x, `E (_,_,subs)), PUpdateNode (name, atts) -> [x, `E (name,atts,subs)]
-        | (_,_), PMove (_, _) -> assert false
-      in
-      let rec iter xmls path =
-        match xmls, path with
-          ((x, `D _) as xml):: q, Path_cdata 0 -> (apply xml op) @ q
-        | (x, `D s) :: q, Path_cdata n ->
-            (x, `D s) :: iter q (Path_cdata (n-1))
-        | ((x, `E (name,atts,subs) as xml) :: q, Path_node (name2, n, next)) when name = name2 ->
-            if n = 0 then
-              (match next with
-                 None -> (apply xml op) @ q
-               | Some p -> [x, `E (name, atts, iter subs p)] @ q
-              )
-            else
-              xml :: iter q (Path_node (name2, n-1, next))
-        | xml :: q, p ->
-            xml :: iter q p
-        | [], _ -> assert false
-      in
-      match iter [t] path with
-        [t] -> t
-      | _ -> assert false
+let patch_xmlnode t path op =
+  try
+    match op with
+      PMove (newpath, pos) ->
+        dbg (string_of_patch_operation (path, op));
+        let removed, t = remove_xmlnode t path in
+        dbg ("node removed");
+        insert_xmlnode t removed newpath pos
+    | _ ->
+        let apply xml op =
+          match xml, op with
+          | _, PReplace tree -> [xmlnode_of_xmltree tree]
+          | _, PInsert (tree, `After) -> [ xml ; xmlnode_of_xmltree tree ]
+          | (_, `D _), PInsert (_, `FirstChild) -> assert false
+          | (x, `E (tag,atts,subs)), PInsert (tree, `FirstChild) ->
+              [ (x, `E (tag, atts, xmlnode_of_xmltree tree :: subs)) ]
+          | _, PDelete -> []
+          | (x, _), PUpdateCData s -> [(x, `D s)]
+          | (x, `D _), PUpdateNode (name, atts) -> [x, `E (name,atts,[])]
+          | (x, `E (_,_,subs)), PUpdateNode (name, atts) -> [x, `E (name,atts,subs)]
+          | (_,_), PMove (_, _) -> assert false
+        in
+        let rec iter xmls path =
+          match xmls, path with
+            ((x, `D _) as xml):: q, Path_cdata 0 -> (apply xml op) @ q
+          | (x, `D s) :: q, Path_cdata n ->
+              (x, `D s) :: iter q (Path_cdata (n-1))
+          | ((x, `E (name,atts,subs) as xml) :: q, Path_node (name2, n, next)) when name = name2 ->
+              if n = 0 then
+                (match next with
+                   None -> (apply xml op) @ q
+                 | Some p -> [x, `E (name, atts, iter subs p)] @ q
+                )
+              else
+                xml :: iter q (Path_node (name2, n-1, next))
+          | xml :: q, p ->
+              xml :: iter q p
+          | [], _ -> assert false
+        in
+        match iter [t] path with
+          [t] -> t
+        | _ -> assert false
+  with
+    Failure msg ->
+      failwith ("Error: "^msg^" when applying path:\n"^
+       (string_of_patch_operation (path, op)))
 
-let patch_of_action (t1, patch) = function
+let patch_of_action (t1, patch) action =
+  dbg ("patch_of_action: "^string_of_action action);
+  match action with
 | Replace (n2, i) ->
     let xmltree2 = n2.xml in
     let (path, _) = path_of_id t1 i in
@@ -905,7 +954,7 @@ let patch_of_action (t1, patch) = function
     (t1, (path, op) :: patch)
 | MoveRank (i, parent, rank) ->
     let (path, _) = path_of_id t1 i in
-    let (new_path, pos) = path_of_id t1 ~rank parent in
+    let (new_path, pos) = path_of_id t1 ~rank ~skip: i parent in
     let op = PMove (new_path, pos) in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
@@ -948,36 +997,6 @@ let patch_of_actions t1 t2 actions =
      file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2) ;
   ) ();
   (List.rev l, t1)
-
-let rec string_of_path = function
-  Path_cdata n -> "CData("^(string_of_int n)^")"
-| Path_node (name, n, next) ->
-    let s = (string_of_name name)^"("^(string_of_int n)^")" in
-    match next with
-      None -> s
-    | Some p -> s^"/"^(string_of_path p)
-
-let string_of_position = function
-  `FirstChild -> "FirstChild"
-| `After -> "After"
-
-let string_of_patch_operation (path, op) =
-  match op with
-  | PReplace xmltree ->
-      "REPLACE("^(string_of_path path)^", "^(string_of_xml xmltree)^")"
-  | PInsert (xmltree, pos) ->
-      "INSERT("^(string_of_path path)^", "^(string_of_xml xmltree)^", "^(string_of_position pos)^")"
-  | PDelete ->
-      "DELETE("^(string_of_path path)^")"
-  | PUpdateCData s ->
-      Printf.sprintf "UPDATE_CDATA(%s, %S)" (string_of_path path) s
-  | PUpdateNode (name, atts) ->
-      Printf.sprintf "UPDATE_NODE(%s, %S, _)" (string_of_path path) (string_of_name name)
-  | PMove (newpath, pos) ->
-      Printf.sprintf "MOVE(%s, %s, %s)" (string_of_path path) (string_of_path newpath) (string_of_position pos)
-
-let string_of_patch l =
-  String.concat "\n" (List.map string_of_patch_operation l)
 
 let diff_with_final_tree ?cut xml1 xml2 =
   let t1 = t_of_xml ?cut xml1 in

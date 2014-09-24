@@ -23,18 +23,25 @@
 (*                                                                               *)
 (*********************************************************************************)
 
+let cut_tags = ref []
+
 let diff file1 file2 =
   let xml1 = Xmldiff.xml_of_file file1 in
   let xml2 = Xmldiff.xml_of_file file2 in
-  let cut (_,tag) _ _ = String.lowercase tag = "pre" in
+  let cut (_,tag) _ _ = List.mem (String.lowercase tag) !cut_tags in
   let (patch, xml3) = Xmldiff.diff_with_final_tree ~cut xml1 xml2 in
   (patch, xml3 = xml2)
 
-let usage = "Usage: "^Sys.argv.(0)^" file1 file2";;
+let options = [
+  "-c", Arg.String (fun s -> cut_tags := s :: !cut_tags),
+  "<tag> cut nodes with tag *:<tag>" ;
+  ]
+
+let usage = "Usage: "^Sys.argv.(0)^" [options] file1 file2";;
 
 let main () =
   let files = ref [] in
-  Arg.parse [] (fun f -> files := f :: !files) usage;
+  Arg.parse options (fun f -> files := f :: !files) usage;
   match List.rev !files with
   | [ file1 ; file2 ] ->
       let (patch, ok) = diff file1 file2 in

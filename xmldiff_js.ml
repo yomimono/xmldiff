@@ -143,9 +143,10 @@ let apply_patch_operation skip_node (path, op) =
         let new_loc = dom_node_by_path skip_node newpath in
         match pos with
         | `FirstChild ->
-             ignore(new_loc##insertBefore (removed_node, (new_loc##firstChild)))
+             ignore(new_loc##insertBefore(removed_node, (new_loc##firstChild)))
         | `After ->
-            ignore(new_loc##insertBefore (removed_node, (new_loc##nextSibling)))
+            let new_parent = parent new_loc in
+            ignore(new_parent##insertBefore(removed_node, (new_loc##nextSibling)));
   in
   let node = dom_node_by_path skip_node path in
   apply (node:>Dom.node Js.t) op
