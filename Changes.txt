@@ -1,3 +1,8 @@
+Next release:
+- Js library
+- new algorithm, faster but less accurate,
+  based on Gregory Cobena's phd thesis
+
 Release 0.2:
 - #2: error when comparing <foo/> to <foo><bar/></foo>
 - use polymorphic variants not to require -rectypes flag
