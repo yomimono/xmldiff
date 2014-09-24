@@ -794,6 +794,8 @@ let path_of_id =
       in
       iter_list xmlnode ~rank ~skip i path cur_path q
   in
+  (* the skip parameter is used to not take into account the node
+     we are moving under its parent. *)
   fun xmlnode ?rank ?(skip=(-1)) i ->
     try iter xmlnode ~rank ~skip i [] Cur_path.empty xmlnode
     with Not_found ->
