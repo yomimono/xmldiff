@@ -9,6 +9,6 @@ archive(native,plugin) = "xmldiff.cmxs"
 package "js" (
   version = "@VERSION@"
   description = "@PACKAGE@ Client code"
-  require = "xmldiff"
+  requires = "js_of_ocaml,xmldiff"
   archive(byte) = "xmldiff-js.cma"
 )

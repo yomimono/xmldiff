@@ -104,6 +104,7 @@ val xml_of_string : string -> xmltree
 val xml_of_file : string -> xmltree
 
 val atts_of_map : string Nmap.t -> (name * string) list
+val atts_of_list : (name * string) list -> string Nmap.t
 
 val string_of_xml : ?cut:bool -> xmltree -> string
 

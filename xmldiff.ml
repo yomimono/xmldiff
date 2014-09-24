@@ -48,6 +48,16 @@ module Nmap =
    end)
 
 type name = Xmlm.name
+
+let string_of_name = function
+  "", s -> s
+| s1, s2 -> s1 ^ ":" ^ s2
+
+let atts_of_list l=
+  List.fold_left
+    (fun acc (name, v) -> Nmap.add name v acc)
+      Nmap.empty l
+
 type 'a xmlt = [
     `E of name * string Nmap.t * 'a list
   | `D of string ]
@@ -89,11 +99,6 @@ let file_of_string ~file s =
   output_string oc s;
   close_out oc
 (*/c==v=[File.file_of_string]=1.1====*)
-
-let string_of_name = function
-  ("",s) -> s
-| (ns,s) -> ns^":"^s
-;;
 
 let string_of_atts map =
   let l =
@@ -164,7 +169,7 @@ let xmlnode_of_t t =
     match xml with
       `D s -> (Some n, `D s)
     | `E (tag,atts,children) ->
-        let children = 
+        let children =
           if t.(n).is_cut then
             List.map unfold_cut children
           else

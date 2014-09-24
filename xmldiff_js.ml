@@ -30,14 +30,6 @@ module Xdiff = Xmldiff
 let log s = Firebug.console##log (Js.string s);;
 
 
-let string_of_name = function
-  "", s -> s
-| s1, s2 -> s1 ^ ":" ^ s2
-
-let atts_of_list l=
-  List.fold_left
-    (fun acc (name, v) -> Xdiff.Nmap.add name v acc)
-      Xdiff.Nmap.empty l
 
 let dom_of_xml =
   let rec map (doc : Dom_html.document Js.t) = function
@@ -61,7 +53,7 @@ let dom_of_xml =
                   (Array.map Js.Unsafe.inject [| Js.string uri ; Js.string att ; v |]))
                    (* FIXME: use setAttributeNS when will be available *)
                with _ ->
-                   log ("could not add attribute "^(string_of_name name))
+                   log ("could not add attribute "^(Xdiff.string_of_name name))
         )
         atts;
       let subs = List.map (map doc) subs in
@@ -95,7 +87,7 @@ let dom_node_by_path skip_node path =
           else
             next node (Xdiff.Path_cdata (n-1))
       | Xdiff.Path_node (name, n, more) when node##nodeType = Dom.ELEMENT ->
-          let s_name = String.lowercase (string_of_name name) in
+          let s_name = String.lowercase (Xdiff.string_of_name name) in
           let node_name = Js.to_string node##nodeName in
           (*log ("name="^s_name^", nodeName="^node_name^", n="^(string_of_int n));*)
           let node_name = String.lowercase node_name in
