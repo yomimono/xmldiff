@@ -27,7 +27,8 @@ let diff file1 file2 =
   let xml1 = Xmldiff.xml_of_file file1 in
   let xml2 = Xmldiff.xml_of_file file2 in
   let cut (_,tag) _ _ = String.lowercase tag = "pre" in
-  Xmldiff.diff ~cut xml1 xml2
+  let (patch, xml3) = Xmldiff.diff_with_final_tree ~cut xml1 xml2 in
+  (patch, xml3 = xml2)
 
 let usage = "Usage: "^Sys.argv.(0)^" file1 file2";;
 
@@ -36,8 +37,10 @@ let main () =
   Arg.parse [] (fun f -> files := f :: !files) usage;
   match List.rev !files with
   | [ file1 ; file2 ] ->
-      let patch = diff file1 file2 in
-      print_endline (Xmldiff.string_of_patch patch)
+      let (patch, ok) = diff file1 file2 in
+      print_endline (Xmldiff.string_of_patch patch);
+      if not ok then
+        failwith "Target tree and patched tree differ"
   | _ -> failwith usage
 ;;
 

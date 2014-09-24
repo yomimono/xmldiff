@@ -92,6 +92,12 @@ val diff :
   ?cut: (name -> string Nmap.t -> xmltree list -> bool) ->
   xmltree -> xmltree -> patch
 
+(** Same as {!diff} but returns also the patched tree, to be able to
+  compare it with the given target tree (for testing purpose). *)
+val diff_with_final_tree :
+  ?cut: (name -> string Nmap.t -> xmltree list -> bool) ->
+  xmltree -> xmltree -> patch * xmltree
+
 (** {2 Utilities} *)
 
 val xml_of_string : string -> xmltree

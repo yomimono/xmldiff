@@ -850,7 +850,6 @@ let rec patch_xmlnode t path op =
         [t] -> t
       | _ -> assert false
 
-let cpt = ref 0;;
 let patch_of_action (t1, patch) = function
 | Replace (n2, i) ->
     let xmltree2 = n2.xml in
@@ -875,11 +874,6 @@ let patch_of_action (t1, patch) = function
     let (path, pos) = path_of_id t1 ~rank i in
     let op = PInsert (xmltree2, pos) in
     let t1 = patch_xmlnode t1 path op in
-    incr cpt;
-    on_dbg (fun () ->
-       file_of_string ~file: (Printf.sprintf "/tmp/insert%02d.dot" !cpt)
-         (dot_of_xmlnode t1))
-      ();
     (t1, (path, op) :: patch)
 | Delete i ->
     let (path,_) = path_of_id t1 i.number in
@@ -896,29 +890,24 @@ let patch_of_action (t1, patch) = function
     in
     let t1 = patch_xmlnode t1 path op in
     (t1, (path, op) :: patch)
-;;
 
 let rec xmltree_of_xmlnode = function
   (_, `D s) -> `D s
 | (_, `E (tag,atts,subs)) -> `E (tag, atts, List.map xmltree_of_xmlnode subs)
-;;
-
 
 let patch_of_actions t1 t2 actions =
   let nodes1 = xmlnode_of_t t1.nodes in
   on_dbg (fun () -> file_of_string ~file: "/tmp/before_patch.dot" (dot_of_xmlnode nodes1)) ();
   let (nodes1, l) = List.fold_left patch_of_action (nodes1, []) actions in
-  on_dbg (fun () -> file_of_string ~file: "/tmp/result.dot" (dot_of_xmlnode nodes1)) ();
+  on_dbg (fun () -> file_of_string ~file: "/tmp/patch_result.dot" (dot_of_xmlnode nodes1)) ();
 
   let t1 = xmltree_of_xmlnode nodes1 in
-  let t2 = xmltree_of_xmlnode (xmlnode_of_t t2.nodes) in
   on_dbg (fun () ->
+     let t2 = xmltree_of_xmlnode (xmlnode_of_t t2.nodes) in
      file_of_string ~file: "/tmp/xml1.xml" (string_of_xml t1) ;
      file_of_string ~file: "/tmp/xml2.xml" (string_of_xml t2) ;
   ) ();
-
-  List.rev l
-;;
+  (List.rev l, t1)
 
 let rec string_of_path = function
   Path_cdata n -> "CData("^(string_of_int n)^")"
@@ -927,7 +916,7 @@ let rec string_of_path = function
     match next with
       None -> s
     | Some p -> s^"/"^(string_of_path p)
-;;
+
 let string_of_position = function
   `FirstChild -> "FirstChild"
 | `After -> "After"
@@ -946,14 +935,11 @@ let string_of_patch_operation (path, op) =
       Printf.sprintf "UPDATE_NODE(%s, %S, _)" (string_of_path path) (string_of_name name)
   | PMove (newpath, pos) ->
       Printf.sprintf "MOVE(%s, %s, %s)" (string_of_path path) (string_of_path newpath) (string_of_position pos)
-;;
 
 let string_of_patch l =
   String.concat "\n" (List.map string_of_patch_operation l)
-;;
 
-
-let diff ?cut xml1 xml2 =
+let diff_with_final_tree ?cut xml1 xml2 =
   let t1 = t_of_xml ?cut xml1 in
   let t2 = t_of_xml ?cut xml2 in
 
@@ -965,5 +951,7 @@ let diff ?cut xml1 xml2 =
   let actions = compute t1 t2 in
   dbg ("actions=\n  "^(String.concat "\n  " (List.map string_of_action actions)));
   patch_of_actions t1 t2 actions
-;;
+
+let diff ?cut xml1 xml2 = fst (diff_with_final_tree ?cut xml1 xml2)
+
 
