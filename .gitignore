@@ -11,3 +11,10 @@
 *.cmxa
 test-xmldiff
 doc
+META
+autom4te.cache/
+config.log
+config.status
+master.Makefile
+ocaml_config.sh
+

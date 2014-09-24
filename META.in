@@ -1,4 +1,4 @@
-version = "0.3"
+version = "@VERSION@"
 description = "Diffs on XML trees"
 requires = "xmlm"
 archive(toploop) = "xmldiff.cmo"
@@ -6,3 +6,9 @@ archive(byte) = "xmldiff.cmo"
 archive(native) = "xmldiff.cmx"
 archive(native,plugin) = "xmldiff.cmxs"
 
+package "js" (
+  version = "@VERSION@"
+  description = "@PACKAGE@ Client code"
+  require = "xmldiff"
+  archive(byte) = "xmldiff-js.cma"
+)

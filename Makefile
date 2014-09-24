@@ -23,8 +23,7 @@
 #                                                                               #
 #################################################################################
 
-# DO NOT FORGET TO BUMP VERSION NUMBER IN META TOO
-VERSION=0.3
+include master.Makefile
 
 PACKAGES=xmlm
 OF_FLAGS=-package $(PACKAGES)
@@ -37,7 +36,7 @@ RM=rm -f
 CP=cp -f
 MKDIR=mkdir -p
 
-all: byte opt
+all: byte opt $(LIB_JS)
 byte: xmldiff.cmo
 opt: xmldiff.cmx xmldiff.cmxs
 
@@ -52,6 +51,10 @@ xmldiff.cmo: xmldiff.cmi xmldiff.ml
 
 xmldiff.cmi xmldiff.cmti: xmldiff.mli
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -c $(COMPFLAGS) $<
+
+$(LIB_JS): xmldiff.cmo xmldiff.cmi xmldiff_js.cmo
+	$(OCAMLFIND) ocamlc $(OF_FLAGS) -package js_of_ocaml -a -o $@ \
+	xmldiff.cmo xmldiff_js.cmo
 
 test-xmldiff: xmldiff.cmx test_xmldiff.ml
 	$(OCAMLFIND) ocamlopt $(OF_FLAGS) $(COMPFLAGS) -o $@ -linkpkg $^
@@ -75,7 +78,8 @@ webdoc:
 install: xmldiff.cmo xmldiff.cmx xmldiff.cmxs
 	ocamlfind install xmldiff META LICENSE \
 		xmldiff.cmi xmldiff.cmti xmldiff.mli xmldiff.cmo \
-		xmldiff.cmx xmldiff.cmxs xmldiff.o
+		xmldiff.cmx xmldiff.cmxs xmldiff.o \
+		`if test -n "$(LIB_JS)"; then echo $(LIB_JS) xmldiff_js.cmi; fi`
 
 uninstall:
 	ocamlfind remove xmldiff
