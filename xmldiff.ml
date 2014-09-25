@@ -113,13 +113,6 @@ let label_of_xml = function
 | `D s -> Text s
 | `E (tag, _, _) -> Node (string_of_name tag)
 
-let hash xml =
-  let s =
-    match xml with
-      `D s -> "!" ^ s
-    | `E _ -> "<" ^ (Marshal.to_string xml [])
-  in
-  Digest.string s
 
 let atts_of_map map =
   List.rev
@@ -147,6 +140,15 @@ let string_of_xml ?(cut=false) tree =
   in
   Xmlm.output_doc_tree frag output (None, tree);
   Buffer.contents b
+
+let hash xml =
+  let s =
+    match xml with
+      `D s -> "!" ^ s
+    | `E _ -> "<" ^ (Marshal.to_string xml [])
+  in
+  Digest.string s
+
 
 let short_label = function
   `E (("",s2), _, _) -> "<"^s2^">"
@@ -178,7 +180,6 @@ let xmlnode_of_t t =
         (Some n, `E (tag, atts, children))
   in
   build (len-1)
-;;
 
 let weight xml children =
   match xml with
@@ -230,8 +231,6 @@ let t_of_xml =
       nodes =  t;
       w0 = t.(Array.length t - 1).weight ;
     }
-;;
-
 
 type operation =
   | Replace of node * int
@@ -283,7 +282,6 @@ let rec xml_of_source s_source source =
 
 and xml_of_string s =
   xml_of_source s (`String (0, s))
-;;
 
 let xml_of_file file =
   let ic = open_in file in
@@ -297,7 +295,6 @@ let xml_of_file file =
     e ->
       close_in ic;
       raise e
-;;
 
 let dot_of_t t =
   let b = Buffer.create 256 in
@@ -377,7 +374,6 @@ let string_of_action = function
 | Delete n1 -> Printf.sprintf "Delete(%d): %s" n1.number (string_of_xml ~cut: true n1.xml)
 | Edit (n1, n2) -> Printf.sprintf "Edit(%d,%d): %s -> %s" n1.number n2.number
   (string_of_xml ~cut: true n1.xml) (string_of_xml ~cut: true n2.xml)
-;;
 
 let have_matching_parents nodes1 n1 n2 =
   match n1.parent, n2.parent with
@@ -473,7 +469,6 @@ let make_actions t1 t2 =
   in
   let (actions, _) = g (actions, 0) (Array.length nodes2 - 1) in
   actions
-;;
 
 let sort_actions =
   let pred a1 a2 =
@@ -509,7 +504,6 @@ let build_hash_map =
 
   in
   fun t -> Array.fold_right add t.nodes Smap.empty
-;;
 
 let rec get_nth_parent t i level =
   match t.nodes.(i).parent with
@@ -801,13 +795,11 @@ let path_of_id =
     with Not_found ->
       let msg = "Id "^(string_of_int i)^" not found" in
       failwith msg
-;;
 
 let rec xmlnode_of_xmltree = function
   `D s -> (None, `D s)
 | `E (name,atts,subs) ->
     (None, `E (name,atts, List.map xmlnode_of_xmltree subs))
-;;
 
 let string_of_position = function
   `FirstChild -> "FirstChild"
