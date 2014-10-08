@@ -528,12 +528,12 @@ let rec match_nodes ?(with_subs=false) t1 t2 i j =
   dbg (Printf.sprintf "matching %d -> %d [with_subs=%B]" i j with_subs);
   let node1 = t1.nodes.(i) in
   match node1.matched with
-  | Some j -> dbg (Printf.sprintf "t1.(%d) already matched to t2.(%d)" i j); assert false
-  | None ->
+  | Some j2 when j <> j2 -> dbg (Printf.sprintf "t1.(%d) already matched to t2.(%d)" i j2); assert false
+  | _ ->
       let node2 = t2.nodes.(j) in
       match node2.matched with
-        Some i -> dbg (Printf.sprintf "t2.(%d) already matched to t1.(%d)" j i); assert false
-      | None ->
+        Some i2 when i <> i2 -> dbg (Printf.sprintf "t2.(%d) already matched to t1.(%d)" j i2); assert false
+      | _ ->
           node1.matched <- Some j;
           node2.matched <- Some i;
           if with_subs then
@@ -547,7 +547,7 @@ let rec match_nodes ?(with_subs=false) t1 t2 i j =
 
 let match_ancestors t1 t2 i j =
   let max_level = int_of_float (d_of_node t2 j) in
-  dbg (Printf.sprintf "match_ancestors  i=%d, j=%d, max_level=%d" i j max_level);
+  dbg (Printf.sprintf "match_ancestors: i=%d, j=%d, max_level=%d" i j max_level);
   let rec iter i j level =
     if level > max_level then
       ()
@@ -568,24 +568,35 @@ let rec min_list p v l =
   in
   iter v l
 
-let rec best_candidate ?(level=1) t1 t2 j cands =
+let best_candidate t1 t2 j cands =
   dbg ("best_candidates "^(String.concat ", " (List.map string_of_int cands)));
-  let parent_j = get_nth_parent t2 j level in
-  match parent_j with
-    None -> None
-  | Some parent_j ->
-      let test_parent i =
-        match get_nth_parent t1 i level with
-          Some p -> t1.nodes.(p).matched = Some parent_j
-        | _ -> false
-      in
-      try Some (List.find test_parent cands)
-      with Not_found ->
-          let d = d_of_node t2 j in
-          if float level < d then
-            best_candidate ~level: (level+1) t1 t2 j cands
-          else
-            None
+  let d = d_of_node t2 j in
+  let map_parent acc = function
+    (i, None) -> acc
+  | (i, Some p) -> (i, t1.nodes.(p).parent) :: acc
+  in
+  let rec find level parent_j acc = function
+    [] -> iter (level + 1) acc
+  | (i, None) :: q -> find level parent_j acc q
+  | (i, Some p) :: q ->
+      match t1.nodes.(p).matched with
+        Some j when j = parent_j ->
+          Some i
+      | _ ->
+          find level parent_j ((i, Some p)::acc) q
+  and iter level cands =
+    if float level < d then
+      begin
+        let cands = List.rev (List.fold_left map_parent [] cands) in
+        match get_nth_parent t2 j level with
+          None -> None
+        | Some parent_j ->
+            find level parent_j [] cands
+      end
+    else
+      None
+  in
+  iter 1 (List.map (fun i -> (i, Some i)) cands)
 
 let candidates hash_t1 t2 j =
   try Smap.find t2.nodes.(j).hash hash_t1 with Not_found -> []
@@ -593,7 +604,7 @@ let candidates hash_t1 t2 j =
 let match_candidate hash_t1 t1 t2 j =
   let candidates = candidates hash_t1 t2 j in
   let pred i = t1.nodes.(i).matched = None in
-  match (*List.filter pred *)candidates with
+  match List.filter pred candidates with
     [] -> None
   | [i] -> Some i
   | l -> best_candidate t1 t2 j l
