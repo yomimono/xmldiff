@@ -679,7 +679,7 @@ let run_phase4 t1 t2 =
              if w > acc_w then (p, w) else acc)
             parents (-1, -1.0)
         in
-        if parent >= 0 then match_nodes t1 t2 j parent
+        if parent >= 0 then match_nodes t1 t2 parent j
   in
   Array.iteri f t2.nodes;
   match_uniquely_labeled_children t1 t2
@@ -773,6 +773,13 @@ let path_of_id =
       on_dbg (fun () -> file_of_string ~file: "/tmp/xmldiff_state.dot" (dot_of_xmlnode xmlnode)) ();
       failwith (Printf.sprintf "Invalid rank: %d element missing\npath: %s" (n+1) (Buffer.contents b))
 
+  | (Some id, xml) :: q when Intset.mem id to_move ->
+      let cur_path =
+        let cp = cp_of_xml xml in
+        cur_path_inc cp cur_path
+      in
+      forward to_move xmlnode path cur_path ~skip n q
+
   | (_, xml) :: _ when n = 0 ->
       let cp = cp_of_xml xml in
       (cp, cur_path_get cp cur_path) :: path
@@ -782,12 +789,8 @@ let path_of_id =
         let cp = cp_of_xml xml in
         cur_path_inc cp cur_path
       in
-      dbg ("forward: id="^(match id with None -> "None" | Some n -> string_of_int n));
-      let n = match id with
-        | Some id when Intset.mem id to_move -> n
-        | _ -> n -  1
-      in
-      forward to_move xmlnode path cur_path ~skip n q
+      (*dbg ("forward: id="^(match id with None -> "None" | Some n -> string_of_int n));*)
+      forward to_move xmlnode path cur_path ~skip (n-1) q
   in
 
   let rec iter to_move xmlnode ~rank ~skip i path cur_path = function
