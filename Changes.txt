@@ -1,4 +1,8 @@
 Next release:
+- fix in diff algorithm
+- add tests
+
+Release 0.3.0:
 - Js library
 - new algorithm, faster but less accurate,
   based on Gregory Cobena's phd thesis
