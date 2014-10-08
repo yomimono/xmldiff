@@ -112,7 +112,7 @@ clean:
 
 # headers :
 ###########
-HEADFILES=Makefile *.ml *.mli
+HEADFILES=configure.ac configure Makefile *.ml *.mli
 .PHONY: headers noheaders
 headers:
 	headache -h header -c .headache_config $(HEADFILES)
