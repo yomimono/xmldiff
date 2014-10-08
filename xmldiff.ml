@@ -992,9 +992,12 @@ let patch_of_action (t1, to_move, patch) action =
       let (path, _) = path_of_id to_move t1 i in
       let (new_path, pos) = path_of_id to_move t1 ~rank ~skip: i parent in
       let op = PMove (new_path, pos) in
-      let t1 = patch_xmlnode t1 path op in
+      let t1_patched = patch_xmlnode t1 path op in
       let to_move = Intset.remove i to_move in
-      (t1, to_move, (path, op) :: patch)
+      if t1_patched = t1 then
+        (t1, to_move, patch)
+      else
+        (t1_patched, to_move, (path, op) :: patch)
   | Insert (n2, i, rank) ->
       let xmltree2 = n2.xml in
       let (path, pos) = path_of_id to_move t1 ~rank i in
