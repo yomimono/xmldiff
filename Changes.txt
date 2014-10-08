@@ -1,4 +1,4 @@
-Next release:
+Release 0.4.0:
 - fix in diff algorithm
 - add tests
 

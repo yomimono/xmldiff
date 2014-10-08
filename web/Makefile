@@ -1,4 +1,5 @@
 STOG=stog
+STOG_SERVER=stog-server
 DEST_DIR=`pwd`/../../xmldiff-gh-pages
 MORE_OPTIONS=
 STOG_OPTIONS=-d $(DEST_DIR) $(MORE_OPTIONS)
@@ -17,6 +18,9 @@ site: style.css
 
 test:
 	$(MAKE) MORE_OPTIONS="--local" site
+
+server:
+	$(STOG_SERVER) .
 
 clean:
 	rm -fr .stog/cache
