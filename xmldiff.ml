@@ -413,7 +413,10 @@ let make_actions t1 t2 =
   let rec f (acc, rank) i =
     let n1 = nodes1.(i) in
     match n1.matched with
-      None -> ((Delete n1) :: acc, rank + 1)
+      None ->
+        let (sub, _) = Array.fold_left f ([], 0) n1.children in
+        let sub = List.filter (function Delete _ -> false | _ -> true) sub in
+        ((Delete n1) :: sub @ acc, rank + 1)
     | Some j ->
         let n2 = nodes2.(j) in
         let matching_parents = have_matching_parents nodes1 n1 n2 in
@@ -485,9 +488,9 @@ let make_actions t1 t2 =
 let sort_actions =
   let pred a1 a2 =
     match a1, a2 with
-    | Delete _, Delete _ -> 0
-    | Delete _, _ -> -1
-    | _, Delete _ -> 1
+    | Delete i1, Delete i2 -> i1.number - i2.number
+    | Delete _, _ -> 1
+    | _, Delete _ -> -1
     | Edit _, Edit _ -> 0
     | Edit _, _ -> -1
     | _, Edit _ -> 1
