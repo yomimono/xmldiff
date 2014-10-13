@@ -414,9 +414,8 @@ let make_actions t1 t2 =
     let n1 = nodes1.(i) in
     match n1.matched with
       None ->
-        let (sub, _) = Array.fold_left f ([], 0) n1.children in
-        let sub = List.filter (function Delete _ -> false | _ -> true) sub in
-        ((Delete n1) :: sub @ acc, rank + 1)
+        let (acc, _) = Array.fold_left f (acc, 0) n1.children in
+        ((Delete n1) :: acc, rank + 1)
     | Some j ->
         let n2 = nodes2.(j) in
         let matching_parents = have_matching_parents nodes1 n1 n2 in
