@@ -1,3 +1,7 @@
+Next release:
+- fix: case when a node should be moved to an inserted parent
+       => delete the node
+
 Release 0.4.0:
 - fix in diff algorithm
 - add tests

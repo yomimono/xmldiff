@@ -417,41 +417,47 @@ let make_actions t1 t2 =
     | Some j ->
         let n2 = nodes2.(j) in
         let matching_parents = have_matching_parents nodes1 n1 n2 in
-        let acc =
+        let (deleted, acc) =
           if matching_parents then
             if n1.rank = n2.rank then
-              acc
+              (false, acc)
             else
               (
                let new_parent =
                  match n1.parent with None -> assert false | Some i -> i
                in
-               MoveRank(n1.number, new_parent, n2.rank) :: acc
+               (false, MoveRank(n1.number, new_parent, n2.rank) :: acc)
               )
           else
             (
-             let new_parent =
-               match matching_parent nodes2 n2 with
-                 None ->
-                   dbg (Printf.sprintf "make_actions: missing matching parent, i = %d" i);
-                   assert false
-               | Some i -> i
-             in
-             let parent =
-               match n2.parent with None -> assert false | Some i -> i
-             in
-             (Move(n1.number, parent, new_parent, n2.rank)) :: acc
+             match matching_parent nodes2 n2 with
+               None ->
+                 dbg (Printf.sprintf
+                  "make_actions: missing matching parent, j=%d, parent=%d"
+                    j
+                    (match nodes2.(j).parent with None -> -1 | Some n -> n)
+                 );
+                 (*assert false*)
+                 (true, (Delete n1 :: acc))
+             | Some new_parent ->
+                 let parent =
+                   match n2.parent with None -> assert false | Some i -> i
+                 in
+                 (false, (Move(n1.number, parent, new_parent, n2.rank)) :: acc)
             )
         in
         let acc =
-          if n1.hash = n2.hash then
+          if deleted then
             acc
           else
-            (
-             let acc = add_edit_action acc n1 n2 in
-             let (acc, _) = Array.fold_left f (acc, 0) n1.children in
-             acc
-            )
+            if n1.hash = n2.hash then
+              acc
+            else
+              (
+               let acc = add_edit_action acc n1 n2 in
+               let (acc, _) = Array.fold_left f (acc, 0) n1.children in
+               acc
+              )
         in
         (acc, rank + 1)
   in
@@ -668,7 +674,7 @@ let run_phase4 t1 t2 =
                      dbg (Printf.sprintf "%d has a non-matched parent %d" i p);
                      acc += (p, t1.nodes.(i).weight)
                  | Some p ->
-                     dbg (Printf.sprintf "%d has a parent %d already matched" i p);
+                     dbg (Printf.sprintf "[j=%d] i=%d has a parent %d already matched" j i p);
                      acc
                  | None -> acc
           )
