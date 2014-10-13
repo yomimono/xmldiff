@@ -534,11 +534,15 @@ let rec match_nodes ?(with_subs=false) t1 t2 i j =
   dbg (Printf.sprintf "matching %d -> %d [with_subs=%B]" i j with_subs);
   let node1 = t1.nodes.(i) in
   match node1.matched with
-  | Some j2 when j <> j2 -> dbg (Printf.sprintf "t1.(%d) already matched to t2.(%d)" i j2); assert false
+  | Some j2 when j <> j2 ->
+      dbg (Printf.sprintf "t1.(%d) already matched to t2.(%d)" i j2);
+      assert false
   | _ ->
       let node2 = t2.nodes.(j) in
       match node2.matched with
-        Some i2 when i <> i2 -> dbg (Printf.sprintf "t2.(%d) already matched to t1.(%d)" j i2); assert false
+        Some i2 when i <> i2 ->
+          dbg (Printf.sprintf "t2.(%d) already matched to t1.(%d)" j i2);
+          assert false
       | _ ->
           node1.matched <- Some j;
           node2.matched <- Some i;

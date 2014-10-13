@@ -3,7 +3,7 @@ DIFF=../test-xmldiff
 TESTS=flat root foo_foo childof \
 	cdata children morechildren \
 	multichildren multideep multideepattr multimulti \
-	one_two_three
+	one_two_three del
 
 TESTS_LARGE=index index_stog install moult
 
