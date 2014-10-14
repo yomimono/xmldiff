@@ -532,19 +532,19 @@ let rec get_nth_parent t i level =
 let d_of_node t i =
   1. +. (float t.height) *. t.nodes.(i).weight /. t.w0
 
-let rec match_nodes ?(with_subs=false) t1 t2 i j =
+let rec match_nodes ?(fail=true) ?(with_subs=false) t1 t2 i j =
   dbg (Printf.sprintf "matching %d -> %d [with_subs=%B]" i j with_subs);
   let node1 = t1.nodes.(i) in
   match node1.matched with
   | Some j2 when j <> j2 ->
       dbg (Printf.sprintf "t1.(%d) already matched to t2.(%d)" i j2);
-      assert false
+      if fail then assert false
   | _ ->
       let node2 = t2.nodes.(j) in
       match node2.matched with
         Some i2 when i <> i2 ->
           dbg (Printf.sprintf "t2.(%d) already matched to t1.(%d)" j i2);
-          assert false
+          if fail then assert false
       | _ ->
           node1.matched <- Some j;
           node2.matched <- Some i;
@@ -567,7 +567,7 @@ let match_ancestors t1 t2 i j =
       match t1.nodes.(i).parent, t2.nodes.(j).parent with
         Some p1, Some p2
           when t1.nodes.(p1).label = t2.nodes.(p2).label ->
-          match_nodes t1 t2 p1 p2;
+          match_nodes ~fail: false t1 t2 p1 p2;
           iter p1 p2 (level + 1)
       | _ -> ()
   in
