@@ -1,6 +1,6 @@
 Next release:
+- fix: when applying patch to DOM, comparing only local names
 - fix: case when a node should be moved to an inserted parent
-       => delete the node
 
 Release 0.4.0:
 - fix in diff algorithm
