@@ -29,8 +29,6 @@ module Xdiff = Xmldiff
 
 let log s = Firebug.console##log (Js.string s);;
 
-
-
 let dom_of_xml =
   let rec map (doc : Dom_html.document Js.t) = function
     `D s ->
@@ -87,11 +85,28 @@ let dom_node_by_path ?(skip_node=(fun _->false)) path =
           else
             next node (Xdiff.Path_cdata (n-1))
       | Xdiff.Path_node (name, n, more) when node##nodeType = Dom.ELEMENT ->
-          let s_name = String.lowercase (Xdiff.string_of_name name) in
+          let (pref, lname) = name in
+          let lname = String.lowercase lname in
           let node_name = Js.to_string node##nodeName in
           (*log ("name="^s_name^", nodeName="^node_name^", n="^(string_of_int n));*)
           let node_name = String.lowercase node_name in
-          if s_name = node_name then
+          let same = lname = node_name in
+          (*
+            match lname = node_name, pref with
+              false, _ -> false
+            | true, "" -> true
+            | true, _ ->
+               let uri = node##lookupNamespaceURI(Js.string "") in
+               let node_uri = node##namespaceURI in
+                log (Printf.sprintf "lname=%S, node_name=%S, uri=%S, node_uri=%S"
+                 lname node_name
+                 (Js.Opt.case uri (fun _ -> "") (fun uri -> Js.to_string uri))
+                   (Js.Opt.case node_uri (fun _ -> "") (fun uri -> Js.to_string uri))
+                );
+               uri = node_uri
+          in
+          *)
+          if same then
             if n = 0 then
               match more with
                 None -> node
