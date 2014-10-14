@@ -5,7 +5,7 @@ TESTS=flat root foo_foo childof \
 	multichildren multideep multideepattr multimulti \
 	one_two_three del
 
-TESTS_LARGE=index index_stog install moult
+TESTS_LARGE=artfoo index index_stog install moult proof prop
 
 KO='\e[1;31m'"*KO\033[1m\033[0m"
 OK='\e[1;32m'"OK\033[1m\033[0m"

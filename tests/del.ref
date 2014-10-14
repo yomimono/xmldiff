@@ -1,0 +1,2 @@
+MOVE(xml(0)/node1(0)/node2(0), xml(0)/CData(0), After)
+DELETE(xml(0)/node1(0))

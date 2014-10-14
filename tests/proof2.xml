@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Article toto-foo</title>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
+</script>
+
+
+  </head>
+  <body>
+    <div id="page">
+      <div id="header">
+        <div class="page-title">Article toto-foo</div>
+
+      </div>
+<div class="prop" id="p1">
+  <div class="title">Proposition 1</div>
+  <div class="contents">
+<p>La preuve est laissée au lecteur.</p>
+</div>
+</div>
+<div class="prop" id="p1">
+  <div class="title">Proposition 2</div>
+  <div class="contents">
+<p>La preuve est laissée au lecteur.</p>
+</div>
+</div>
+<p>
+Coucou le monde
+</p>
+
+    </div>
+  </body>
+</html>

@@ -1,2 +1,2 @@
-DELETE(root(0)/child(2))
 MOVE(root(0)/child(1), root(0), FirstChild)
+DELETE(root(0)/child(2))

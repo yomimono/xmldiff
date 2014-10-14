@@ -487,7 +487,7 @@ let make_actions t1 t2 =
 let sort_actions =
   let pred a1 a2 =
     match a1, a2 with
-    | Delete i1, Delete i2 -> i1.number - i2.number
+    | Delete i1, Delete i2 -> i2.number - i1.number (* higher node first *)
     | Delete _, _ -> 1
     | _, Delete _ -> -1
     | Edit _, Edit _ -> 0
@@ -1017,11 +1017,20 @@ let patch_of_action (t1, to_move, patch) action =
       let t1 = patch_xmlnode t1 path op in
       (t1, to_move, (path, op) :: patch)
   | Delete i ->
-      let (path,_) = path_of_id to_move t1 i.number in
-      let op = PDelete in
-      let t1 = patch_xmlnode t1 path op in
-      let to_move = Intset.remove i.number to_move in
-      (t1, to_move, (path, op) :: patch)
+      begin
+        match path_of_id to_move t1 i.number with
+        | exception _ ->
+           (* the node may have already been deleted when its parent was,
+              see sort_actions: we delete first higher nodes, to prevent
+              deleting all children then parent *)
+            let to_move = Intset.remove i.number to_move in
+            (t1, to_move, patch)
+        | (path,_) ->
+            let op = PDelete in
+            let t1 = patch_xmlnode t1 path op in
+            let to_move = Intset.remove i.number to_move in
+            (t1, to_move, (path, op) :: patch)
+      end
   | Edit (n1, n2) ->
       let (path,_) = path_of_id to_move t1 n1.number in
       let op =

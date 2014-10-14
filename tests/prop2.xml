@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Article toto-foo</title>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+<body>
+<div id="page">
+<div class="prop" id="p1">
+<div class="collapse" id="p1__body">
+  <div class="title">Proof
+1 (<a href="http://yoursite.net/foo.html#th1">Theorem 1</a>)</div>
+  <div class="contents"><p>La preuve est laissée au lecteur.</p></div>
+</div>
+</div>
+
+<div class="prop" id="p1">
+  <div class="contents">
+<p>La preuve est laissée au lecteur.</p></div>
+</div>
+</div>
+</body>
+</html>

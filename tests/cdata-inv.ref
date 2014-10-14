@@ -1,2 +1,2 @@
-DELETE(root(0)/CData(0))
 INSERT(root(0), some cdata, FirstChild)
+DELETE(root(0)/CData(1))
