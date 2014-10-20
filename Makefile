@@ -54,7 +54,7 @@ xmldiff.cmi xmldiff.cmti: xmldiff.mli
 
 $(LIB_JS): xmldiff.cmi xmldiff.cmo xmldiff_js.cmi xmldiff_js.cmo
 	$(OCAMLFIND) ocamlc $(OF_FLAGS) -package js_of_ocaml -a -o $@ \
-	xmldiff.cmo xmldiff_js.cmo
+	xmldiff_js.cmo
 
 test-xmldiff: xmldiff.cmx test_xmldiff.ml
 	$(OCAMLFIND) ocamlopt $(OF_FLAGS) $(COMPFLAGS) -o $@ -linkpkg $^
