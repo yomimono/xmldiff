@@ -1,6 +1,8 @@
 Release 0.5.0:
 - fix: when applying patch to DOM, compare only local names
 - fix: case when a node should be moved to an inserted parent
+- fix: xmldiff JS lib does not embed the Xmldiff module, as
+  package xmldiff.js already depends on package xmldiff.
 
 Release 0.4.0:
 - fix in diff algorithm

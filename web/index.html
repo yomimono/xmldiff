@@ -23,11 +23,21 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <subsection id="releases" title="Releases">
 <ul>
+<li><a href="xmldiff-0.5.0.tar.gz">0.5.0</a> [2014-10-21]:
+<ul><li>fix implementation of XyDiff algorithm,</li>
+    <li>when applying patch to DOM, compare only local names,</li>
+    <li>xmldiff JS lib does not embed the Xmldiff module, as
+     package xmldiff.js already depends on package xmldiff,</li>
+    <li>add more tests.</li>
+</ul>
+</li>
+
 <li><a href="xmldiff-0.4.0.tar.gz">0.4.0</a> [2014-10-09]:
 <ul><li>Fix implementation of XyDiff algorithm,</li>
     <li>Add more tests.</li>
 </ul>
 </li>
+
 <li><a href="xmldiff-0.3.0.tar.gz">0.3.0</a> [2014-09-24]:
 <ul>
 <li>Change the algorithm, now use Gregory Cobena's
@@ -81,11 +91,13 @@ To be installed, Xmldiff requires:
 This will install the <icode>xmldiff</icode> package
 (and eventually the <icode>xmldiff.js</icode>) with findlib.
 </p>
+<p>You can also install with <a href="http://opam.ocaml.org/">Opam</a>:</p>
+<command-line>opam install xmldiff</command-line>
 </section>
 
 <section id="doc" title="Documentation">
 <p>
-Reference documentation is <a href="refdoc/Xmldiff.html">here</a>
+Reference documentation is <a href="refdoc/index.html">here</a>.
 </p>
 </section>
 
