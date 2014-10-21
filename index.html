@@ -46,11 +46,21 @@ Xmldiff is <a href="https://github.com/zoggy/xmldiff">hosted on Github</a>.
 
 <div class="subsection"><div class="subsection-title" id="releases">Releases</div>
 <ul>
+<li><a href="xmldiff-0.5.0.tar.gz">0.5.0</a> [2014-10-21]:
+<ul><li>fix implementation of XyDiff algorithm,</li>
+    <li>when applying patch to DOM, compare only local names,</li>
+    <li>xmldiff JS lib does not embed the Xmldiff module, as
+     package xmldiff.js already depends on package xmldiff,</li>
+    <li>add more tests.</li>
+</ul>
+</li>
+
 <li><a href="xmldiff-0.4.0.tar.gz">0.4.0</a> [2014-10-09]:
 <ul><li>Fix implementation of XyDiff algorithm,</li>
     <li>Add more tests.</li>
 </ul>
 </li>
+
 <li><a href="xmldiff-0.3.0.tar.gz">0.3.0</a> [2014-09-24]:
 <ul>
 <li>Change the algorithm, now use Gregory Cobena's
@@ -104,11 +114,13 @@ To be installed, Xmldiff requires:
 This will install the <span class="icode"><span class="hl std">xmldiff</span></span> package
 (and eventually the <span class="icode"><span class="hl std">xmldiff.js</span></span>) with findlib.
 </p>
+<p>You can also install with <a href="http://opam.ocaml.org/">Opam</a>:</p>
+<pre class="code-sh">opam <span class="hl kwc">install</span> xmldiff</pre>
 </div>
 
 <div class="section"><div class="section-title" id="doc">Documentation</div>
 <p>
-Reference documentation is <a href="refdoc/Xmldiff.html">here</a>
+Reference documentation is <a href="refdoc/index.html">here</a>.
 </p>
 </div>
 
