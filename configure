@@ -1684,7 +1684,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-VERSION=0.5.0
+VERSION=0.6.0
 PACKAGE=xmldiff
 
 # The root directory where we will compile

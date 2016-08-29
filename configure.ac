@@ -26,7 +26,7 @@
 # check for one particular file of the sources
 AC_INIT(master.Makefile.in)
 
-VERSION=0.5.0
+VERSION=0.6.0
 PACKAGE=xmldiff
 
 # The root directory where we will compile
