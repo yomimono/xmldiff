@@ -1,3 +1,7 @@
+Next release:
+-  Xmldiff_js: add optional ?doc parameter to functions
+  to specify the root document (default is Dom_html.document)
+
 Release 0.5.0:
 - fix: when applying patch to DOM, compare only local names
 - fix: case when a node should be moved to an inserted parent
