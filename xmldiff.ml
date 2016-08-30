@@ -396,7 +396,8 @@ let add_edit_action acc n1 n2 =
   | `D s1, `D s2 -> Edit (n1, n2) :: acc
   | `E (tag1, atts1, _), `E (tag2, atts2, _) ->
       match n1.is_cut, n2.is_cut with
-        true, true -> Replace (n2, n1.number) :: acc
+        true, _
+      | _, true -> Replace (n2, n1.number) :: acc
       | false, false ->
           begin
             if tag1 = tag2 && Nmap.equal (=) atts1 atts2 then
