@@ -1,5 +1,6 @@
 Next release:
--  Xmldiff_js: add optional ?doc parameter to functions
+- fix: detection of xmlm version
+- Xmldiff_js: add optional ?doc parameter to functions
   to specify the root document (default is Dom_html.document)
 
 Release 0.5.0:
